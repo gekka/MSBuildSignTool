@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<!--<TargetFrameworks>net48;net6.0;net8.0;</TargetFrameworks>-->
+		<TargetFrameworks>net6.0;</TargetFrameworks>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<LangVersion>10.0</LangVersion>
+	</PropertyGroup>
+
+	<PropertyGroup>
+
+		<SingTool_EnableSign_Build   >true</SingTool_EnableSign_Build>
+		<SingTool_EnableSign_Publish >true</SingTool_EnableSign_Publish>
+		<SingTool_EnableSign_Nupkg   >true</SingTool_EnableSign_Nupkg>
+		
+		<SignTool_PFX      >Test.pfx</SignTool_PFX>
+		<SignTool_Password >123456</SignTool_Password>
+		
+		<!-- pfxで発行の署名するとファイルが解放されていなくて失敗する？ 少し遅延させると成功する -->
+		<SignTool_DelaySign>2</SignTool_DelaySign>
+
+		<!-- pfxで署名する場合、PCに証明書をインストールしていないと検証が失敗する -->
+		<SignTool_Verify >false</SignTool_Verify>
+
+		<!--<SignTool_Nupkg_Pfx_Path>$(SignTool_PFX)</SignTool_Nupkg_Pfx_Path>
+		<SignTool_Nupkg_Password>$(SignTool_Password)</SignTool_Nupkg_Password>-->
+	</PropertyGroup>
+</Project>

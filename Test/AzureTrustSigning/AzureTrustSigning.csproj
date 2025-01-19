@@ -1,0 +1,40 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Trusted.Signing.Client" Version="1.0.60" />
+    </ItemGroup>
+
+    <PropertyGroup>
+        <SignTool_Dlib_MetaJson_Path>az_sign.metadata.json</SignTool_Dlib_MetaJson_Path>
+    </PropertyGroup>
+
+    <Target Name="Azure Trusted Signing Test" BeforeTargets="Build">
+        <Message Text="SignTool_Dlib_Dll_Path=$(SignTool_Dlib_Dll_Path)" />
+
+        <Message Text="TrustedSigningDlibVersion=$(TrustedSigningDlibVersion)" />
+        <Message Text="TrustedSigningDlibRootFolder=$(TrustedSigningDlibRootFolder)"/>
+        <Message Text="TrustedSigningDlibBinFolder=$(TrustedSigningDlibBinFolder)"/>
+        <Message Text="TrustedSigningDlibBinArchFolder=$(TrustedSigningDlibBinArchFolder)"/>
+        <Message Text="TrustedSigningDlibFilePath=$(TrustedSigningDlibFilePath)"/>
+
+        <Message Text="Is64BitProcess= $([System.Environment]::Is64BitProcess)" />
+    </Target>
+
+    <!--<Target Name="A1" Outputs="$(XX)">
+        <PropertyGroup>
+            <XX>123</XX>
+        </PropertyGroup>
+    </Target>
+
+    <Target Name="BB" BeforeTargets="clean">
+        <CallTarget Targets="A1">
+            <Output TaskParameter="TargetOutputs" PropertyName="YY"/>
+        </CallTarget>
+        <Message Text="YY=$(YY)"/>
+    </Target>-->
+</Project>

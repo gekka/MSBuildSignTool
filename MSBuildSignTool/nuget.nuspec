@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+    <metadata>
+        <!-- Required elements-->
+        <id>Gekka.MSBuild.targets.SignTool</id>
+        <version>0.0.0.0-preview</version>
+        <description>
+                This package adds MSBuild task in project file for sign project output or publis file at release build using signtool.exe .&#xd;&#xa;&#xd;&#xa;Releaseビルドで出力または発行されたファイルにsigntool.exeで署名を実行するMSBuildのタスクを追加します
+        </description>
+        <authors>gekka</authors>
+        <copyright>gekka</copyright>
+        <tags>SignTool MSBuild</tags>
+        <readme>README.md</readme>
+        <license type="expression">MIT</license>
+        <icon>icon.png</icon>
+    </metadata>
+    
+    <files>
+        <file src="build\MSBuildSignTool.targets" target="build\Gekka.MSBuild.targets.SignTool.targets"/>
+        <file src="..\README*" target="\"/>
+        <file src="images\icon.png" target="\"/>
+    </files>
+</package>

@@ -1,0 +1,11 @@
+﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal">
+  <Bundle Name="WixBundle" Manufacturer="TODO Manufacturer" Version="1.0.0.0" UpgradeCode="13dda55a-e767-4fc9-a7d4-3840c0f648c5">
+    <BootstrapperApplication>
+      <bal:WixStandardBootstrapperApplication LicenseUrl="https://www.example.com/license" Theme="hyperlinkLicense" />
+    </BootstrapperApplication>
+
+    <Chain>
+        <MsiPackage SourceFile="..\Wix\bin\x64\Release\en-US\Wix.msi" />
+    </Chain>
+  </Bundle>
+</Wix>

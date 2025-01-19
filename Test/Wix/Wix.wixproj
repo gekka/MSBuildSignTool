@@ -1,0 +1,6 @@
+﻿<Project Sdk="WixToolset.Sdk/5.0.2">
+  <PropertyGroup>
+    <!-- インストール時のUACに表示される名前 -->
+    <SignTool_Description>WIX TestDescription</SignTool_Description>
+  </PropertyGroup>
+</Project>

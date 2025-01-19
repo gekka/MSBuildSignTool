@@ -1,0 +1,13 @@
+﻿<Project Sdk="WixToolset.Sdk/5.0.2">
+    <PropertyGroup>
+        <OutputType>Bundle</OutputType>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="WixToolset.Bal.wixext" Version="5.0.2" />
+    </ItemGroup>
+
+    <PropertyGroup>
+        <SignTool_Algorithm_SHA1>true</SignTool_Algorithm_SHA1>
+        <SignTool_Algorithm_SHA256>true</SignTool_Algorithm_SHA256>
+    </PropertyGroup>
+</Project>

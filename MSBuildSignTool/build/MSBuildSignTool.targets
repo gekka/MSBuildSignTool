@@ -1,0 +1,383 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- MIT License
+	Copyright 2024 gekka
+
+	Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+	The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+	THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+-->
+
+<Project >
+
+    <PropertyGroup>
+        <SingTool_EnableSign_Build    Condition="'$(SingTool_EnableSign_Build)'==''"  >true</SingTool_EnableSign_Build>
+        <SingTool_EnableSign_Publish  Condition="'$(SingTool_EnableSign_Publish)'==''">true</SingTool_EnableSign_Publish>
+        <SingTool_EnableSign_Nupkg    Condition="'$(SingTool_EnableSign_Nupkg)'==''"  >true</SingTool_EnableSign_Nupkg>
+
+        <SignTool_TimeStampServer     Condition="'$(SignTool_TimeStampServer)'==''" ></SignTool_TimeStampServer>
+        <SignTool_Algorithm_SHA1      Condition="'$(SignTool_Algorithm_SHA1)'==''"  >false</SignTool_Algorithm_SHA1>
+        <SignTool_Algorithm_SHA256    Condition="'$(SignTool_Algorithm_SHA256)'==''">true</SignTool_Algorithm_SHA256>
+
+        <SignTool_PFX      Condition="$(SignTool_PFX)==''"></SignTool_PFX>
+        <SignTool_Password Condition="$(SignTool_Password)==''"></SignTool_Password>
+
+        <SignTool_Dlib_Dll_Path      Condition="'$(SignTool_Dlib_Dll_Path)'==''"></SignTool_Dlib_Dll_Path>
+        <SignTool_Dlib_MetaJson_Path Condition="'$(SignTool_Dlib_MetaJson_Path)'==''"></SignTool_Dlib_MetaJson_Path>
+
+        <SignTool_Verify Condition="'$(SignTool_Verify)'==''">true</SignTool_Verify>
+
+        <!--
+        <SignTool_Nupkg_FingerPrint></SignTool_Nupkg_FingerPrint>
+		<SignTool_Nupkg_SubjectName></SignTool_Nupkg_SubjectName>
+		<SignTool_Nupkg_StoreName></SignTool_Nupkg_StoreName>
+		<SignTool_Nupkg_StoreLocation></SignTool_Nupkg_StoreLocation>
+		<SignTool_Nupkg_Pfx_Path></SignTool_Nupkg_Pfx_Path>
+		<SignTool_Nupkg_Password></SignTool_Nupkg_Password>
+		<SignTool_DelaySign></SignTool_DelaySign>
+        -->
+    </PropertyGroup>
+
+    <!-- 署名可能なファイルの拡張子  -->
+    <PropertyGroup>
+        <!-- ２重署名可能 -->
+        <SignTool_SupportedExtensions_Dual>.exe;.dll;.ocx;.scr;.sys;.cab;.cat;.efi;</SignTool_SupportedExtensions_Dual>
+        <!-- 1種類しか署名できない -->
+        <SignTool_SupportedExtensions_Single>.msi;.ps1;.vbs;.vbe;.js;</SignTool_SupportedExtensions_Single>
+        <!-- SHA256でしか署名できない -->
+        <SignTool_SupportedExtensions_Only256>.msix;.msixbundle;.appx;.appxbundle;</SignTool_SupportedExtensions_Only256>
+    </PropertyGroup>
+
+    <ItemDefinitionGroup>
+        <SignTool_InputFiles  />
+    </ItemDefinitionGroup>
+
+
+
+    <!-- ビルド後の署名を実行 -->
+    <!-- 2回目にTargetPathがブランクで実行されるの場合がある(?)ので注意する -->
+    <Target Name="SignTool_After_Build" AfterTargets="Build"
+			Condition="'$(SingTool_EnableSign_Build)'=='true' And '@(SignTool_ExePaths->Count())'!='0' And '@(SignTool_InputFiles_Temp->Count())'!='0' And '$(TargetPath)'!=''"
+			DependsOnTargets="SignTool_GetInputFiles_ForBuild;SignTool_GetSignToolExePath;">
+
+        <Message Text="＠＠＠＠＠ Start Code Signing(Build) ＠＠＠＠＠" />
+
+        <CallTarget Targets="SignTool_Get_m_Properties" >            
+            <Output TaskParameter="TargetOutputs" PropertyName="m_Properties"/>
+        </CallTarget>
+        
+        <PropertyGroup>
+            <SignTool_TargetObjPath >$(IntermediateOutputPath)$(TargetFileName)</SignTool_TargetObjPath >
+            <PP_SignTool_InputFiles_Temp>@(SignTool_InputFiles_Temp)</PP_SignTool_InputFiles_Temp>
+            <m_Properties>$(m_Properties);PP_SignTool_InputFiles_Temp=$(PP_SignTool_InputFiles_Temp)</m_Properties>
+        </PropertyGroup>
+
+        <Exec Condition="'$(SignTool_DelaySign)'!=''" Command="ping 127.0.0.1 -n $(SignTool_DelaySign) &gt; nul " />
+
+        <MSBuild  Projects="$(MSBuildProjectFullPath)"
+				  Targets="SignTool_Work"
+                  Properties="$(m_Properties)"  />
+
+        <!-- objフォルダに作られた出力ファイルをbinの出力ファイルへコピー -->
+        <Copy Condition="'$(TargetFileName)'!='' And Exists($(SignTool_TargetObjPath))"
+			  SourceFiles="$(SignTool_TargetObjPath)"
+			  DestinationFiles="$(TargetPath)" />
+    </Target>
+
+    <!-- 発行後の署名を実行 -->
+    <Target Name="SignTool_After_Publish" AfterTargets="Publish"
+			Condition="'$(SingTool_EnableSign_Publish)'=='true' And $(OS.Contains('Windows')) And '$(Configuration.Contains(&quot;Release&quot;))' And '$(TargetPath)'!='' And Exists('$(DevEnvDir)..\Tools\VsDevCmd.bat')"
+			DependsOnTargets="SignTool_GetInputFiles_ForPublish;SignTool_GetSignToolExePath">
+
+        <Message Text="＠＠＠＠＠ Start Code Signing(Publish) ＠＠＠＠＠" />
+        <Message Text="PublishedSingleFilePath=$(PublishedSingleFilePath)" Importance="high" />
+
+        <CallTarget Targets="SignTool_Get_m_Properties"  >
+            <Output TaskParameter="TargetOutputs" PropertyName="m_Properties"/>
+        </CallTarget>
+        
+        <PropertyGroup>
+            <PP_SignTool_InputFiles_Temp>@(SignTool_InputFiles_Temp)</PP_SignTool_InputFiles_Temp>
+            <m_Properties>$(m_Properties);PP_SignTool_InputFiles_Temp=$(PP_SignTool_InputFiles_Temp)</m_Properties>
+        </PropertyGroup>
+
+        <Exec Condition="'$(SignTool_DelaySign)'!=''" Command="ping 127.0.0.1 -n $(SignTool_DelaySign) &gt; nul " />
+
+        <MSBuild  Condition="'$(PublishedSingleFilePath)'!=''"
+				  Projects="$(MSBuildProjectFullPath)"
+				  Targets="SignTool_Work"
+				  Properties="$(m_Properties)" />
+    </Target>
+
+
+    <!-- nupkgに署名する場合 -->
+    <Target Name="SignTool_SignPackage" AfterTargets="Pack"
+			Condition="'$(SingTool_EnableSign_Nupkg)'=='true' And $(Configuration.Contains(&quot;Release&quot;))">
+
+        <Message Text="＠＠＠＠＠ Start Sign Nuget Package ＠＠＠＠＠"/>
+
+        <Message Text="SignTool_TimeStampServer     =$(SignTool_TimeStampServer)" />
+        <Message Text="SignTool_Nupkg_FingerPrint   =$(SignTool_Nupkg_FingerPrint)" />
+        <Message Text="SignTool_Nupkg_SubjectName   =$(SignTool_Nupkg_SubjectName)" />
+        <Message Text="SignTool_Nupkg_StoreName     =$(SignTool_Nupkg_StoreName>)" />
+        <Message Text="SignTool_Nupkg_StoreLocation =$(SignTool_Nupkg_StoreLocation)" />
+        <Message Text="SignTool_Nupkg_Pfx_Path      =$(SignTool_Nupkg_Pfx_Path)" />
+        <!--<Message Text="SignTool_Nupkg_Password      =$(SignTool_Nupkg_Password)" />-->
+
+        <PropertyGroup>
+            <SignTool_TimeStampServer  Condition="'$(SignTool_TimeStampServer)'==''" >http://timestamp.digicert.com</SignTool_TimeStampServer>
+        </PropertyGroup>
+
+        <PropertyGroup>
+            <SignTool_Nupkg_Arg_TimeStampServer Condition="'$(SignTool_TimeStampServer)'!=''"> --timestamper $(SignTool_TimeStampServer) </SignTool_Nupkg_Arg_TimeStampServer>
+
+            <SignTool_Nupkg_Arg_FingerPrint Condition="'$(SignTool_Nupkg_FingerPrint)'!=''"   > --certificate-fingerprint   $(SignTool_Nupkg_FingerPrint) </SignTool_Nupkg_Arg_FingerPrint>
+
+            <SignTool_Nupkg_SubjectName     Condition="$(SignTool_Nupkg_SubjectName.Trim().Contains(' ')) And !$(SignTool_Nupkg_SubjectName.Trim().StartsWith('&quot;'))">&quot;$(SignTool_Nupkg_SubjectName.Trim())&quot;</SignTool_Nupkg_SubjectName>
+            <SignTool_Nupkg_Arg_SubjectName Condition="'$(SignTool_Nupkg_SubjectName)'!=''"   > --certificate-subject-name  $(SignTool_Nupkg_SubjectName) </SignTool_Nupkg_Arg_SubjectName>
+
+            <SignTool_Nupkg_Arg_StoreName     Condition="'$(SignTool_Nupkg_StoreName)'!=''"   > --certificate-store-name     $(SignTool_Nupkg_StoreName) </SignTool_Nupkg_Arg_StoreName>
+            <SignTool_Nupkg_Arg_StoreLocation Condition="'$(SignTool_Nupkg_SubjectName)'!=''" > --certificate-store-location $(SignTool_Nupkg_SubjectName) </SignTool_Nupkg_Arg_StoreLocation>
+
+            <SignTool_Nupkg_Arg_Pfx_Path Condition="'$(SignTool_Nupkg_Pfx_Path)'!=''"> --certificate-path     $(SignTool_Nupkg_Pfx_Path) </SignTool_Nupkg_Arg_Pfx_Path>
+            <SignTool_Nupkg_Arg_Password Condition="'$(SignTool_Nupkg_Password)'!=''"> --certificate-password $(SignTool_Nupkg_Password) </SignTool_Nupkg_Arg_Password>
+
+
+            <SignTool_NupkgPath>$(PackageOutputAbsolutePath)$(PackageId).$(PackageVersion).nupkg</SignTool_NupkgPath>
+        </PropertyGroup>
+
+        <Exec Condition="Exists($(SignTool_NupkgPath))"
+			  Command="dotnet nuget sign $(SignTool_Nupkg_Arg_TimeStampServer) $(SignTool_Nupkg_Arg_FingerPrint) $(SignTool_Nupkg_Arg_SubjectName) $(SignTool_Nupkg_Arg_StoreName) $(SignTool_Nupkg_Arg_StoreLocation) $(SignTool_Nupkg_Arg_Pfx_Path) $(SignTool_Nupkg_Arg_Password) -v:diag &quot;$(SignTool_NupkgPath)&quot;"
+			  StdOutEncoding="UTF-8"/>
+
+        <Exec Condition="$(SignTool_Verify)=='true' And Exists($(SignTool_NupkgPath))"
+			  Command="dotnet nuget verify -v:diag &quot;$(SignTool_NupkgPath)&quot;"
+			  StdOutEncoding="UTF-8"/>
+    </Target>
+
+    <!-- ********************************************************** -->
+
+    <!-- ファイルに署名と検証 -->
+    <!--
+		必要なプロパティ
+			SignTool_Algorithm_SHA1
+			SignTool_Algorithm_SHA256
+			SignTool_TimeStampServer
+			SignTool_ExePath
+			PP_SignTool_InputFiles_Temp
+			
+		オプション	
+			SignTool_PFX
+			SignTool_Password
+            
+            SignTool_Dlib_Dll_Path
+            SignTool_Dlib_MetaJson_Path
+            
+            SignTool_Verify
+	-->
+    <Target Name="SignTool_Work">
+        <Message Text="＠＠＠＠＠ Start Code Signing ＠＠＠＠＠" />
+
+        <Message Importance="low" Text="SignTool_Algorithm_SHA1=$(SignTool_Algorithm_SHA1)" />
+        <Message Importance="low" Text="SignTool_Algorithm_SHA256=$(SignTool_Algorithm_SHA256)" />
+        <Message Importance="low" Text="SignTool_TimeStampServer=$(SignTool_TimeStampServer)"/>
+        <Message Importance="low" Text="SignTool_ExePath=$(SignTool_ExePath)"/>
+        <Message Importance="low" Text="PP_SignTool_InputFiles_Temp=$(PP_SignTool_InputFiles_Temp)" />
+        <Message Importance="low" Text="SignTool_PFX=$(SignTool_PFX)"/>
+        <!--<Message Importance="low" Text="SignTool_Password=$(SignTool_Password)" />-->
+
+        <Message Importance="low" Text="SignTool_Dlib_Dll_Path=$(SignTool_Dlib_Dll_Path)" />
+        <Message Importance="low" Text="SignTool_Dlib_MetaJson_Path=$(SignTool_Dlib_MetaJson_Path)"/>
+
+
+        <Message Importance="low" Text="SignTool_Verify=$(SignTool_Verify)"/>
+        <PropertyGroup>
+            <!-- SHA1とSHA256を同時に署名するか-->
+            <SignTool_IsDual Condition="$(SignTool_Algorithm_SHA1)=='true' And $(SignTool_Algorithm_SHA256)=='true' ">true</SignTool_IsDual>
+        </PropertyGroup>
+
+        <ItemGroup>
+            <SignTool_InputFiles_Temp Remove ="$(SignTool_InputFiles_Temp.Identity)" />
+            <SignTool_InputFiles_Temp Include="$(PP_SignTool_InputFiles_Temp)" />
+
+            <!-- 署名の種類ごとに分類 -->
+            <SignTool_InputFiles_SHA1   Include="%(SignTool_InputFiles_Temp.Identity)"  Condition="$(SignTool_SupportedExtensions_Dual.Contains(&quot;%(Extension);&quot;))" />
+            <SignTool_InputFiles_SHA256 Include="%(SignTool_InputFiles_Temp.Identity)"  Condition="$(SignTool_SupportedExtensions_Dual.Contains(&quot;%(Extension);&quot;)) And '$(SignTool_IsDual)'!='true'" />
+            <SignTool_InputFiles_Dual   Include="%(SignTool_InputFiles_Temp.Identity)"  Condition="$(SignTool_SupportedExtensions_Dual.Contains(&quot;%(Extension);&quot;)) And '$(SignTool_IsDual)'=='true'"  />
+
+            <SignTool_InputFiles_SHA1   Include="%(SignTool_InputFiles_Temp.Identity)"  Condition="$(SignTool_SupportedExtensions_Single.Contains(&quot;%(Extension);&quot;)) And '$(SignTool_Algorithm_SHA256)'!='true'" />
+            <SignTool_InputFiles_SHA256 Include="%(SignTool_InputFiles_Temp.Identity)"  Condition="$(SignTool_SupportedExtensions_Single.Contains(&quot;%(Extension);&quot;)) And '$(SignTool_Algorithm_SHA256)'=='true'"  />
+
+            <SignTool_InputFiles_SHA256 Include="%(SignTool_InputFiles_Temp.Identity)"  Condition="$(SignTool_SupportedExtensions_Only256.Contains(&quot;%(Extension);&quot;)) And '$(SignTool_Algorithm_SHA256)'=='true'"  />
+        </ItemGroup>
+
+        <Error Condition="'@(SignTool_InputFiles_SHA1->Count())'=='0' And @(SignTool_InputFiles_SHA256->Count())=='0'" Text="SignTool input file is empty" />
+
+
+
+        <PropertyGroup>
+            <!-- Execに渡せるようにファイルパスをスペース区切りの文字列化。 (8000文字くらいでコマンドラインの限界になるはず)-->
+            <SignTool_InputFiles_SHA1_Text  >@(SignTool_InputFiles_SHA1  ->'&quot;%(FullPath)&quot;', ' ')</SignTool_InputFiles_SHA1_Text>
+            <SignTool_InputFiles_SHA256_Text>@(SignTool_InputFiles_SHA256->'&quot;%(FullPath)&quot;', ' ')</SignTool_InputFiles_SHA256_Text>
+            <SignTool_InputFiles_Dual_Text>@(SignTool_InputFiles_Dual->'&quot;%(FullPath)&quot;', ' ')</SignTool_InputFiles_Dual_Text>
+            <SignTool_InputFiles_All>@(SignTool_InputFiles_Temp->'&quot;%(FullPath)&quot;', ' ')</SignTool_InputFiles_All>
+
+            <SignTool_Arg_PFX      Condition="'$(SignTool_PFX)'!=''"     > /f $(SignTool_PFX) </SignTool_Arg_PFX>
+            <SignTool_Arg_Password Condition="'$(SignTool_Password)'!=''"> /p $(SignTool_Password) </SignTool_Arg_Password>
+
+            <SignTool_Arg_Dlib Condition="'$(SignTool_Dlib_MetaJson_Path)'!=''"> /dlib &quot;$(SignTool_Dlib_Dll_Path)&quot; /dmdf &quot;$(SignTool_Dlib_MetaJson_Path)&quot;</SignTool_Arg_Dlib>
+
+            <SignTool_Arg_Description Condition="$(SignTool_Description)!=''" > /d &quot;$(SignTool_Description)&quot; </SignTool_Arg_Description>
+
+            <SignTool_Arg_Auto Condition="'$(SignTool_Arg_PFX)'=='' And '$(SignTool_Arg_Password)'=='' And '$(SignTool_Arg_Dlib)'==''"> /a </SignTool_Arg_Auto>
+
+            <SignTool_Args>$(SignTool_Arg_Auto) $(SignTool_Arg_PFX) $(SignTool_Arg_Password) $(SignTool_Arg_Description) $(SignTool_Arg_Dlib)</SignTool_Args>
+        </PropertyGroup>
+
+        <Message Text="SHA1  : %(SignTool_InputFiles_SHA1.FullPath)"   />
+        <Message Text="SHA256: %(SignTool_InputFiles_SHA256.FullPath)" />
+        <Message Text="Dual  : %(SignTool_InputFiles_Dual.FullPath)" />
+
+        <!-- 署名実行  -->
+        <!--
+		<Exec Condition="'$(SignTool_Algorithm_SHA1)'=='true'   And '@(SignTool_InputFiles_SHA1->Count())'!='0'"   Command="&quot;$(SignTool_ExePath)&quot; sign /v /a     /t  $(SignTool_TimeStampServer) /fd SHA1              /d &quot;$(SignTool_Description)&quot; &quot;%(SignTool_InputFiles_SHA1.FullPath)&quot;"/>
+		<Exec Condition="'$(SignTool_Algorithm_SHA256)'=='true' And '@(SignTool_InputFiles_SHA256->Count())'!='0'" Command="&quot;$(SignTool_ExePath)&quot; sign /v /a     /tr $(SignTool_TimeStampServer) /td SHA256 /fd SHA256 /d &quot;$(SignTool_Description)&quot; &quot;%(SignTool_InputFiles_SHA256.FullPath)&quot;"/>
+		<Exec Condition="'$(SignTool_IsDual)'=='true'           And '@(SignTool_InputFiles_Dual->Count())'!='0'"   Command="&quot;$(SignTool_ExePath)&quot; sign /v /a /as /tr $(SignTool_TimeStampServer) /td SHA256 /fd SHA256 /d &quot;$(SignTool_Description)&quot; &quot;%(SignTool_InputFiles_Dual.FullPath)&quot;"/>
+		-->
+
+        <Exec Condition="'$(SignTool_Algorithm_SHA1)'=='true'   And '@(SignTool_InputFiles_SHA1->Count())'!='0'"   Command="&quot;$(SignTool_ExePath)&quot; sign /v $(SignTool_Args)     /t  $(SignTool_TimeStampServer) /fd SHA1               $(SignTool_InputFiles_SHA1_Text)"/>
+        <Exec Condition="'$(SignTool_Algorithm_SHA256)'=='true' And '@(SignTool_InputFiles_SHA256->Count())'!='0'" Command="&quot;$(SignTool_ExePath)&quot; sign /v $(SignTool_Args)     /tr $(SignTool_TimeStampServer) /td SHA256 /fd SHA256  $(SignTool_InputFiles_SHA256_Text)"/>
+        <Exec Condition="'$(SignTool_IsDual)'=='true'           And '@(SignTool_InputFiles_Dual->Count())'!='0'"   Command="&quot;$(SignTool_ExePath)&quot; sign /v $(SignTool_Args) /as /tr $(SignTool_TimeStampServer) /td SHA256 /fd SHA256  $(SignTool_InputFiles_Dual_Text)"/>
+
+        <Message Condition="'$(SignTool_Verify)'=='true'" Text="＠＠＠＠＠ Verify Code Signing ＠＠＠＠＠" />
+        <Exec Condition="'$(SignTool_Verify)'=='true' And '$(SignTool_Algorithm_SHA1)'=='true'   And '@(SignTool_InputFiles_SHA1->Count())'!='0'"   Command="&quot;$(SignTool_ExePath)&quot; verify /v /pa /tw $(SignTool_InputFiles_SHA1_Text)" />
+        <Exec Condition="'$(SignTool_Verify)'=='true' And '$(SignTool_Algorithm_SHA256)'=='true' And '@(SignTool_InputFiles_SHA256->Count())'!='0'" Command="&quot;$(SignTool_ExePath)&quot; verify /v /pa /tw $(SignTool_InputFiles_SHA256_Text)" />
+        <Exec Condition="'$(SignTool_Verify)'=='true' And '$(SignTool_IsDual)'=='true'           And '@(SignTool_InputFiles_Dual->Count())'!='0'"   Command="&quot;$(SignTool_ExePath)&quot; verify /v /pa /tw $(SignTool_InputFiles_Dual_Text)" />
+
+    </Target>
+
+    <!-- SignTool_Workに渡すプロパティ文字列を作る -->
+    <Target Name="SignTool_Get_m_Properties" Outputs="$(Properties)">
+        <PropertyGroup>
+            <!--<SignTool_TargetObjPath >$(IntermediateOutputPath)$(TargetFileName)</SignTool_TargetObjPath >-->
+            <SignTool_ExePath Condition="'$(SignTool_ExePath)'==''">%(SignTool_ExePaths.FullPath)</SignTool_ExePath>
+
+            <!--<PP_SignTool_InputFiles_Temp>@(SignTool_InputFiles_Temp)</PP_SignTool_InputFiles_Temp>-->
+
+            <SignTool_TimeStampServer Condition="'$(SignTool_TimeStampServer)'=='' and '$(SignTool_Dlib_MetaJson_Path)'==''" >http://timestamp.digicert.com</SignTool_TimeStampServer>
+            <SignTool_TimeStampServer Condition="'$(SignTool_TimeStampServer)'=='' and '$(SignTool_Dlib_MetaJson_Path)'!=''" >http://timestamp.acs.microsoft.com/</SignTool_TimeStampServer>
+
+            <SignTool_Dlib_Dll_Path    Condition="'$(SignTool_Dlib_Dll_Path)'=='' And '$([System.Environment]::Is64BitProcess)'!='true'">$(TrustedSigningDlibBinFolder)\x86\Azure.CodeSigning.Dlib.dll</SignTool_Dlib_Dll_Path>
+            <SignTool_Dlib_Dll_Path    Condition="'$(SignTool_Dlib_Dll_Path)'=='' And '$([System.Environment]::Is64BitProcess)'=='true'">$(TrustedSigningDlibBinFolder)\x64\Azure.CodeSigning.Dlib.dll</SignTool_Dlib_Dll_Path>
+
+            <Properties>
+                SignTool_Algorithm_SHA1=$(SignTool_Algorithm_SHA1);
+                SignTool_Algorithm_SHA256=$(SignTool_Algorithm_SHA256);
+                SignTool_TimeStampServer=$(SignTool_TimeStampServer);
+                SignTool_ExePath=$(SignTool_ExePath);
+                SignTool_PFX=$(SignTool_PFX);
+                SignTool_Password=$(SignTool_Password);
+                SignTool_Verify=$(SignTool_Verify);
+                SignTool_Dlib_Dll_Path=$(SignTool_Dlib_Dll_Path);
+                SignTool_Dlib_MetaJson_Path=$(SignTool_Dlib_MetaJson_Path);
+            </Properties>
+        </PropertyGroup>
+    </Target>
+    <!-- ********************************************************** -->
+
+    <Target Name="SignTool_GetDevBatchFilePath"
+            Condition="('$(SingTool_EnableSign_Build)'=='true' or '$(SingTool_EnableSign_Publish)'=='true') And $(OS.Contains('Windows')) And $(Configuration.Contains(&quot;Release&quot;))">
+
+        <!-- GitHub Actionsには環境変数DevEvnDirが設定されていないらしい-->
+        <!--<Message Text="DevEnvDir=$(DevEnvDir)" />        
+        <Message Text="MSBuildBinPath=$(MSBuildBinPath)" />
+        <Message Text="MSBuildSDKsPath=$(MSBuildSDKsPath)"/>
+        <Message Text="VsInstallRoot=$(VsInstallRoot)" />
+        <Message Text="GITHUB_ACTIONS=$(GITHUB_ACTIONS)" />-->
+
+        <ItemGroup>
+            <!-- GitHub Actionsだとこっち無い？-->
+            <SignTool_DevBatchFilePaths Include="$(VsInstallRoot)\Common7\Tools\VsDevCmd.bat" Condition="Exists('$(VsInstallRoot)\Common7\Tools\VsDevCmd.bat')"/>
+
+            <!-- GitHub Actionsだとこっちはある？-->
+            <SignTool_DevBatchFilePaths Include="$(VsInstallRoot)\VC\Auxiliary\Build\vcvars64.bat" Condition="Exists('$(VsInstallRoot)\VC\Auxiliary\Build\vcvars64.bat')"/>
+        </ItemGroup>
+        <Message Importance="high" Text="Batch=%(SignTool_DevBatchFilePaths.Fullpath)"/>
+    </Target>
+
+    <Target Name="SignTool_GetSignToolExePath" DependsOnTargets="SignTool_GetDevBatchFilePath" BeforeTargets="Build"
+            Condition="('$(SingTool_EnableSign_Build)'=='true' or '$(SingTool_EnableSign_Publish)'=='true') And $(OS.Contains('Windows')) And $(Configuration.Contains(&quot;Release&quot;))">
+        <PropertyGroup>
+            <batchpath>%(SignTool_DevBatchFilePaths.FullPath)</batchpath>
+        </PropertyGroup>
+
+        <Exec Condition="!Exists($(SignTool_TargetFullPath))"
+			  Command="call &quot;$(batchpath)&quot; &amp; where signtool"
+			  IgnoreExitCode="true" ConsoleToMSBuild="true" EchoOff="true" >
+            <Output TaskParameter="ConsoleOutput"  PropertyName="WhereOutput" />
+        </Exec>
+        <PropertyGroup>
+            <p_SignTool_ExePath Condition="!Exists($(SignTool_TargetFullPath))">$([System.Text.RegularExpressions.RegEx]::Match($(WhereOutput),'[^;]*\\signtool.exe').Value)</p_SignTool_ExePath>
+        </PropertyGroup>
+        <Error Condition="!Exists($(p_SignTool_ExePath))" Text="SignTool.exe is not found" />
+        <ItemGroup>
+            <SignTool_ExePaths Include="$(p_SignTool_ExePath)"/>
+        </ItemGroup>
+        <Message Text="SignTool.exe Path=$(p_SignTool_ExePath)"/>
+    </Target>
+
+
+    <!-- ビルド後の署名対象のファイルを取得 -->
+    <Target Name="SignTool_GetInputFiles_ForBuild" BeforeTargets="Build">
+        <Message  Text="＠＠＠＠＠ Start GetInputFiles For Build ＠＠＠＠＠" />
+
+        <PropertyGroup>
+            <!--objフォルダに作られた出力ファイル.  (セットアッププロジェクトではこっちを使うので)-->
+            <SignTool_TargetObjPath >$(IntermediateOutputPath)$(TargetFileName)</SignTool_TargetObjPath >
+
+            <!-- .Net Coreでexeとdllが作られる場合を判定 -->
+            <SignTool_AppHostExe_Path>$(IntermediateOutputPath)\apphost.exe</SignTool_AppHostExe_Path>
+            <SignTool_AppHostExe_Exists Condition="Exists($(SignTool_AppHostExe_Path))">true</SignTool_AppHostExe_Exists>
+            <SignTool_AppHostExe_PathTarget Condition="$(SignTool_AppHostExe_Exists)=='true'">$(OutputPath)$(TargetName).exe</SignTool_AppHostExe_PathTarget>
+
+            <!-- SHA1とSHA256を同時に署名するか-->
+            <!--
+			<SignTool_IsDual Condition="$(SignTool_Algorithm_SHA1)=='true' And $(SignTool_Algorithm_SHA256)=='true' ">true</SignTool_IsDual>-->
+        </PropertyGroup>
+
+        <Message Importance="low" Text="SignTool_AppHostExe_Path=$(SignTool_AppHostExe_Path)" />
+        <Message Importance="low" Text="SignTool_AppHostExe_Exists=$(SignTool_AppHostExe_Exists)" />
+        <Message Importance="low" Text="SignTool_AppHostExe_PathTarget=$(SignTool_AppHostExe_PathTarget)" />
+
+        <ItemGroup>
+            <!-- 署名対象ファイル一覧をクリアしてから新しく格納-->
+            <SignTool_InputFiles_Temp Remove="%(SignTool_InputFiles_Temp.Identity)" />
+            <SignTool_InputFiles_Temp Include="%(SignTool_InputFiles.Identity)" />
+
+            <!--    C#,VB.Netはobjにあるファイルを対象に。VC++はobj無しで別の位置にある -->
+            <SignTool_InputFiles_Temp Include="$(TargetPath)"             Condition="!Exists($(SignTool_TargetObjPath)) And '$(TargetPath)'!=''" />
+            <SignTool_InputFiles_Temp Include="$(SignTool_TargetObjPath)" Condition=" Exists($(SignTool_TargetObjPath))" />
+
+            <SignTool_InputFiles_Temp Include="$(SignTool_AppHostExe_Path)" Condition="$(SignTool_AppHostExe_Exists)=='true'" />
+            <SignTool_InputFiles_Temp Include="$(SignTool_AppHostExe_PathTarget)" Condition=" Exists($(SignTool_AppHostExe_PathTarget)) And '$(SignTool_AppHostExe_PathTarget)'!=''" />
+
+
+            <SignTool_InputFiles_TempOut Remove="%(SignTool_InputFiles_TempOut)" />
+            <SignTool_InputFiles_TempOut Inlude="dummyOutput" />
+        </ItemGroup>
+
+        <Message Importance="low" Text="TargetPath=$(TargetPath)" />
+        <Message Importance="low" Text="SignTool_TargetObjPath=$(SignTool_TargetObjPath)" />
+        <Message Importance="low" Text="SignTool_TargetObjPath=$(SignTool_TargetObjPath)" />
+    </Target>
+
+    <!-- 発行後の署名対象のファイルを取得 -->
+    <Target Name="SignTool_GetInputFiles_ForPublish">
+        <ItemGroup>
+            <!-- 署名対象ファイル一覧をクリアしてから新しく格納-->
+            <SignTool_InputFiles_Temp Remove="%(SignTool_InputFiles_Temp.Identity)" />
+            <SignTool_InputFiles_Temp Include="$(PublishedSingleFilePath)" Condition="Exists($(PublishedSingleFilePath))"/>
+        </ItemGroup>
+
+        <Message Text="PublishedSingleFilePath=$(PublishedSingleFilePath)" Importance="high" />
+    </Target>
+</Project>

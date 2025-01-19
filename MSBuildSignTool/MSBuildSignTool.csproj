@@ -1,0 +1,55 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+
+		<!--<TargetFrameworks>net48;net8.0</TargetFrameworks>-->
+		<TargetFrameworks>netstandard1.0</TargetFrameworks>
+		<OutputType>Library</OutputType>
+
+		<Configurations>Debug;Release;ReleaseSetup</Configurations>
+		<PackageVersion>0.2.0.0</PackageVersion>
+		<PackageTags>a;b</PackageTags>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<IsPackable>true</IsPackable>
+		<IncludeBuildOutput>false</IncludeBuildOutput>
+		<PackageVersion>$(PackageVersion.Split('.')[0]).$(PackageVersion.Split('.')[1]).$([System.DateTime]::Now.Subtract($([System.DateTime]::new(2000,1,1))).Days.ToString()).$([MSBuild]::Divide($([System.DateTime]::Now.TimeOfDay.TotalSeconds) , 2).ToString("0"))</PackageVersion>
+
+		<IncludeBuiltProjectOutputGroup>false</IncludeBuiltProjectOutputGroup>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<!--<GeneratePackageOnBuild>false</GeneratePackageOnBuild>-->
+
+		<NuspecFile>nuget.nuspec</NuspecFile>
+		<NuspecProperties>version=$(PackageVersion)</NuspecProperties>
+	</PropertyGroup>
+
+	<!-- nupkgに署名する場合 -->
+	<!-- <Target Name="SignTool_SignPackage" AfterTargets="Pack" Condition="$(Configuration.Contains(&quot;Release&quot;))">
+		<Message Text="＠＠＠＠＠ Start Sign Nuget Package ＠＠＠＠＠"/>
+		<PropertyGroup>
+			<SignTool_TimeStampServer  Condition="'$(SignTool_TimeStampServer)'==''" >http://timestamp.digicert.com</SignTool_TimeStampServer>
+			<SignTool_Nuget_FingerPring>fc68c8b92b1e7ef4df7d94c580f43ed949874513</SignTool_Nuget_FingerPring>
+		</PropertyGroup>
+
+		<PropertyGroup>
+			<SignTool_Nuget_FingerPring Condition="'$(SignTool_Nuget_FingerPring)'!=''"> &#x2d;&#x2d;certificate-fingerprint $(SignTool_Nuget_FingerPring) </SignTool_Nuget_FingerPring>
+			<SignTool_NupkgPath>$(PackageOutputAbsolutePath)$(PackageId).$(PackageVersion).nupkg</SignTool_NupkgPath>
+		</PropertyGroup>
+
+		<Exec Command="dotnet nuget sign $(SignTool_Nuget_FingerPring) &#45;&#45;timestamper $(SignTool_TimeStampServer) -v:diag &quot;$(SignTool_NupkgPath)&quot;"
+			  StdOutEncoding="UTF-8"
+			  Condition="Exists($(SignTool_NupkgPath))"/>
+
+		<Exec Command="dotnet nuget verify -v:diag &quot;$(SignTool_NupkgPath)&quot;"
+			  StdOutEncoding="UTF-8"
+			  Condition="Exists($(SignTool_NupkgPath))"/>
+	</Target>-->
+
+	<ItemGroup>
+		<None Update="images\icon.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</None>
+	</ItemGroup>
+
+
+</Project>
