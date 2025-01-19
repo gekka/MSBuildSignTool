@@ -13,6 +13,7 @@
         <readme>README.md</readme>
         <license type="expression">MIT</license>
         <icon>icon.png</icon>
+        <projectUrl>https://github.com/gekka/MSBuildSignTool</projectUrl>
     </metadata>
     
     <files>

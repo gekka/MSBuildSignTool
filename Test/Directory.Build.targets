@@ -2,4 +2,8 @@
 <Project >
 	<!-- Testフォルダ以下にあるプロジェクトファイルに共通の処理として読み込ませる  -->
 	<Import Project="..\MSBuildSignTool\build\MSBuildSignTool.targets" />
+
+	<PropertyGroup>
+		<SignTool_Verify Condition="'$(SignTool_Verify)'==''">true</SignTool_Verify>
+	</PropertyGroup>
 </Project>
