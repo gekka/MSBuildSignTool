@@ -24,7 +24,7 @@
         <SignTool_Dlib_Dll_Path      Condition="'$(SignTool_Dlib_Dll_Path)'==''"></SignTool_Dlib_Dll_Path>
         <SignTool_Dlib_MetaJson_Path Condition="'$(SignTool_Dlib_MetaJson_Path)'==''"></SignTool_Dlib_MetaJson_Path>
 
-        <SignTool_Verify Condition="'$(SignTool_Verify)'==''">true</SignTool_Verify>
+        <SignTool_Verify Condition="'$(SignTool_Verify)'==''">false</SignTool_Verify>
 
         <!--
         <SignTool_Nupkg_FingerPrint></SignTool_Nupkg_FingerPrint>
