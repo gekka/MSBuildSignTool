@@ -4,6 +4,6 @@
 	<Import Project="..\MSBuildSignTool\build\MSBuildSignTool.targets" />
 
 	<PropertyGroup>
-		<SignTool_Verify Condition="'$(SignTool_Verify)'==''">true</SignTool_Verify>
+		<SignTool_Verify>false</SignTool_Verify>
 	</PropertyGroup>
 </Project>

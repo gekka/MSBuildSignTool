@@ -18,12 +18,18 @@
         <SignTool_Algorithm_SHA1      Condition="'$(SignTool_Algorithm_SHA1)'==''"  >false</SignTool_Algorithm_SHA1>
         <SignTool_Algorithm_SHA256    Condition="'$(SignTool_Algorithm_SHA256)'==''">true</SignTool_Algorithm_SHA256>
 
+        <!-- signtoolが /a で選択する証明書を確定させたい場合に、発行者名を指定する部分文字列 (/i に渡す文字列)-->
+        <SignTool_AutoSelect_Issuer   Condition="'$(SignTool_AutoSelect_Issuer)'==''"></SignTool_AutoSelect_Issuer>
+
+        <!-- PFXとパスワードで署名する場合  -->
         <SignTool_PFX      Condition="$(SignTool_PFX)==''"></SignTool_PFX>
         <SignTool_Password Condition="$(SignTool_Password)==''"></SignTool_Password>
 
+        <!-- Azure Trust Signingで署名する場合 -->
         <SignTool_Dlib_Dll_Path      Condition="'$(SignTool_Dlib_Dll_Path)'==''"></SignTool_Dlib_Dll_Path>
         <SignTool_Dlib_MetaJson_Path Condition="'$(SignTool_Dlib_MetaJson_Path)'==''"></SignTool_Dlib_MetaJson_Path>
 
+        <!-- 署名後にベリファイを行うか  -->
         <SignTool_Verify Condition="'$(SignTool_Verify)'==''">false</SignTool_Verify>
 
         <!--
@@ -169,6 +175,8 @@
 			SignTool_PFX
 			SignTool_Password
             
+            SignTool_AutoSelect_Issuer
+            
             SignTool_Dlib_Dll_Path
             SignTool_Dlib_MetaJson_Path
             
@@ -181,6 +189,7 @@
         <Message Importance="low" Text="SignTool_Algorithm_SHA256=$(SignTool_Algorithm_SHA256)" />
         <Message Importance="low" Text="SignTool_TimeStampServer=$(SignTool_TimeStampServer)"/>
         <Message Importance="low" Text="SignTool_ExePath=$(SignTool_ExePath)"/>
+        <Message Importance="low" Text="SignTool_AutoSelect_Issuer=$(SignTool_AutoSelect_Issuer)" />
         <Message Importance="low" Text="PP_SignTool_InputFiles_Temp=$(PP_SignTool_InputFiles_Temp)" />
         <Message Importance="low" Text="SignTool_PFX=$(SignTool_PFX)"/>
         <!--<Message Importance="low" Text="SignTool_Password=$(SignTool_Password)" />-->
@@ -229,7 +238,8 @@
             <SignTool_Arg_Description Condition="$(SignTool_Description)!=''" > /d &quot;$(SignTool_Description)&quot; </SignTool_Arg_Description>
 
             <SignTool_Arg_Auto Condition="'$(SignTool_Arg_PFX)'=='' And '$(SignTool_Arg_Password)'=='' And '$(SignTool_Arg_Dlib)'==''"> /a </SignTool_Arg_Auto>
-
+            <SignTool_Arg_Auto Condition="'$(SignTool_Arg_Auto)'!='' And  '$(SignTool_AutoSelect_Issuer)'!=''">$(SignTool_Arg_Auto) /i $(SignTool_AutoSelect_Issuer) </SignTool_Arg_Auto>
+            
             <SignTool_Args>$(SignTool_Arg_Auto) $(SignTool_Arg_PFX) $(SignTool_Arg_Password) $(SignTool_Arg_Description) $(SignTool_Arg_Dlib)</SignTool_Args>
         </PropertyGroup>
 
@@ -274,6 +284,7 @@
                 SignTool_Algorithm_SHA256=$(SignTool_Algorithm_SHA256);
                 SignTool_TimeStampServer=$(SignTool_TimeStampServer);
                 SignTool_ExePath=$(SignTool_ExePath);
+                SignTool_AutoSelect_Issuer=$(SignTool_AutoSelect_Issuer);
                 SignTool_PFX=$(SignTool_PFX);
                 SignTool_Password=$(SignTool_Password);
                 SignTool_Verify=$(SignTool_Verify);
