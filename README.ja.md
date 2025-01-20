@@ -8,11 +8,12 @@ MSBuildでReleaseビルドを実行したら、その出力ファイルをsignto
 ## 機能
 
 - SignTool.exeを自動的に検索
-- - PFXファイルとパスワードによる署名
+- PFXファイルとパスワードによる署名
 - Azure Trust Signingでの署名
 - Github Actionsでの署名
 - SHA1とSHA256の多重署名 (多重署名可能なファイルの場合のみ)
 - Build,Publish,Packに対応
+- 複数の出力ファイルの場合の自動選択(exe+dll , exe+msi)
 
 ## 要求事項
 Windows SDKなどでsigntool.exeがインストールされていること。  
@@ -30,12 +31,20 @@ Azure Trust Signingで署名する場合は プロジェクトに nugetで[Micro
 ```xml
 <Project >
     <PropertyGroup>
+        <SingTool_EnableSign_Build   >true</SingTool_EnableSign_Build>
+        <SingTool_EnableSign_Publish >true</SingTool_EnableSign_Publish>
+        <SingTool_EnableSign_Nupkg   >true</SingTool_EnableSign_Nupkg>
+
+        <SignTool_ExePath></SignTool_ExePath>
+
         <SignTool_TimeStampServer></SignTool_TimeStampServer>
         <SignTool_Algorithm_SHA1>false</SignTool_Algorithm_SHA1>
         <SignTool_Algorithm_SHA256>true</SignTool_Algorithm_SHA256>
-        <SignTool_ExePath>path to signtool.exe</SignTool_ExePath>
+        
+        <SignTool_AutoSelect_Subject ></SignTool_AutoSelect_Subject>
+        <SignTool_AutoSelect_Issuer  ></SignTool_AutoSelect_Issuer>
 
-        <!-- For use PFX and passwork -->
+        <!-- For use PFX and password -->
         <SignTool_PFX      ></SignTool_PFX>
         <SignTool_Password ></SignTool_Password>
 
@@ -101,6 +110,8 @@ Azure Trust Signingで署名する場合は プロジェクトに nugetで[Micro
 - .cat
 - .efi
 
+- PE形式のファイル
+
 ### SHA1もしくはSHA256のどちらか一方のみ
 
 - .msi
@@ -110,6 +121,7 @@ Azure Trust Signingで署名する場合は プロジェクトに nugetで[Micro
 - .js (JScript)
 
 ### SHA256のみ
+
 - .msix
 - .msixbundle
 - .appx

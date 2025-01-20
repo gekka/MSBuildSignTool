@@ -14,11 +14,17 @@
         <SingTool_EnableSign_Publish  Condition="'$(SingTool_EnableSign_Publish)'==''">true</SingTool_EnableSign_Publish>
         <SingTool_EnableSign_Nupkg    Condition="'$(SingTool_EnableSign_Nupkg)'==''"  >true</SingTool_EnableSign_Nupkg>
 
+        <SignTool_ExePath             Condition="'$(SignTool_ExePath)'==''"></SignTool_ExePath>
+
         <SignTool_TimeStampServer     Condition="'$(SignTool_TimeStampServer)'==''" ></SignTool_TimeStampServer>
         <SignTool_Algorithm_SHA1      Condition="'$(SignTool_Algorithm_SHA1)'==''"  >false</SignTool_Algorithm_SHA1>
         <SignTool_Algorithm_SHA256    Condition="'$(SignTool_Algorithm_SHA256)'==''">true</SignTool_Algorithm_SHA256>
 
-        <!-- signtoolが /a で選択する証明書を確定させたい場合に、発行者名を指定する部分文字列 (/i に渡す文字列)-->
+     
+
+        <!-- signtoolが /a で選択する証明書を確定させたい場合に、その証明書のサブジェクトを指定する部分文字列 (/n に渡す文字列)-->
+        <SignTool_AutoSelect_Subject  Condition="'$(SignTool_AutoSelect_Subject)'==''"></SignTool_AutoSelect_Subject>
+        <!-- signtoolが /a で選択する証明書を確定させたい場合に、その証明書の発行者名を指定する部分文字列 (/i に渡す文字列)-->
         <SignTool_AutoSelect_Issuer   Condition="'$(SignTool_AutoSelect_Issuer)'==''"></SignTool_AutoSelect_Issuer>
 
         <!-- PFXとパスワードで署名する場合  -->
@@ -28,6 +34,9 @@
         <!-- Azure Trust Signingで署名する場合 -->
         <SignTool_Dlib_Dll_Path      Condition="'$(SignTool_Dlib_Dll_Path)'==''"></SignTool_Dlib_Dll_Path>
         <SignTool_Dlib_MetaJson_Path Condition="'$(SignTool_Dlib_MetaJson_Path)'==''"></SignTool_Dlib_MetaJson_Path>
+
+        <!-- signtool.exeの /d に渡す文字列-->
+        <SignTool_Arg_Description Condition="'$(SignTool_Arg_Description)'==''" ></SignTool_Arg_Description>
 
         <!-- 署名後にベリファイを行うか  -->
         <SignTool_Verify Condition="'$(SignTool_Verify)'==''">false</SignTool_Verify>
@@ -67,7 +76,7 @@
 
         <Message Text="＠＠＠＠＠ Start Code Signing(Build) ＠＠＠＠＠" />
 
-        <CallTarget Targets="SignTool_Get_m_Properties" >            
+        <CallTarget Targets="SignTool_Get_m_Properties"  >            
             <Output TaskParameter="TargetOutputs" PropertyName="m_Properties"/>
         </CallTarget>
         
@@ -172,15 +181,8 @@
 			PP_SignTool_InputFiles_Temp
 			
 		オプション	
-			SignTool_PFX
-			SignTool_Password
-            
-            SignTool_AutoSelect_Issuer
-            
-            SignTool_Dlib_Dll_Path
-            SignTool_Dlib_MetaJson_Path
-            
             SignTool_Verify
+            SignTool_Args
 	-->
     <Target Name="SignTool_Work">
         <Message Text="＠＠＠＠＠ Start Code Signing ＠＠＠＠＠" />
@@ -189,16 +191,10 @@
         <Message Importance="low" Text="SignTool_Algorithm_SHA256=$(SignTool_Algorithm_SHA256)" />
         <Message Importance="low" Text="SignTool_TimeStampServer=$(SignTool_TimeStampServer)"/>
         <Message Importance="low" Text="SignTool_ExePath=$(SignTool_ExePath)"/>
-        <Message Importance="low" Text="SignTool_AutoSelect_Issuer=$(SignTool_AutoSelect_Issuer)" />
-        <Message Importance="low" Text="PP_SignTool_InputFiles_Temp=$(PP_SignTool_InputFiles_Temp)" />
-        <Message Importance="low" Text="SignTool_PFX=$(SignTool_PFX)"/>
-        <!--<Message Importance="low" Text="SignTool_Password=$(SignTool_Password)" />-->
-
-        <Message Importance="low" Text="SignTool_Dlib_Dll_Path=$(SignTool_Dlib_Dll_Path)" />
-        <Message Importance="low" Text="SignTool_Dlib_MetaJson_Path=$(SignTool_Dlib_MetaJson_Path)"/>
-
 
         <Message Importance="low" Text="SignTool_Verify=$(SignTool_Verify)"/>
+        <Message Importance="low" Text="SignTool_Args=$(SignTool_Args)"/>
+                
         <PropertyGroup>
             <!-- SHA1とSHA256を同時に署名するか-->
             <SignTool_IsDual Condition="$(SignTool_Algorithm_SHA1)=='true' And $(SignTool_Algorithm_SHA256)=='true' ">true</SignTool_IsDual>
@@ -221,26 +217,12 @@
 
         <Error Condition="'@(SignTool_InputFiles_SHA1->Count())'=='0' And @(SignTool_InputFiles_SHA256->Count())=='0'" Text="SignTool input file is empty" />
 
-
-
         <PropertyGroup>
             <!-- Execに渡せるようにファイルパスをスペース区切りの文字列化。 (8000文字くらいでコマンドラインの限界になるはず)-->
             <SignTool_InputFiles_SHA1_Text  >@(SignTool_InputFiles_SHA1  ->'&quot;%(FullPath)&quot;', ' ')</SignTool_InputFiles_SHA1_Text>
             <SignTool_InputFiles_SHA256_Text>@(SignTool_InputFiles_SHA256->'&quot;%(FullPath)&quot;', ' ')</SignTool_InputFiles_SHA256_Text>
             <SignTool_InputFiles_Dual_Text>@(SignTool_InputFiles_Dual->'&quot;%(FullPath)&quot;', ' ')</SignTool_InputFiles_Dual_Text>
             <SignTool_InputFiles_All>@(SignTool_InputFiles_Temp->'&quot;%(FullPath)&quot;', ' ')</SignTool_InputFiles_All>
-
-            <SignTool_Arg_PFX      Condition="'$(SignTool_PFX)'!=''"     > /f $(SignTool_PFX) </SignTool_Arg_PFX>
-            <SignTool_Arg_Password Condition="'$(SignTool_Password)'!=''"> /p $(SignTool_Password) </SignTool_Arg_Password>
-
-            <SignTool_Arg_Dlib Condition="'$(SignTool_Dlib_MetaJson_Path)'!=''"> /dlib &quot;$(SignTool_Dlib_Dll_Path)&quot; /dmdf &quot;$(SignTool_Dlib_MetaJson_Path)&quot;</SignTool_Arg_Dlib>
-
-            <SignTool_Arg_Description Condition="$(SignTool_Description)!=''" > /d &quot;$(SignTool_Description)&quot; </SignTool_Arg_Description>
-
-            <SignTool_Arg_Auto Condition="'$(SignTool_Arg_PFX)'=='' And '$(SignTool_Arg_Password)'=='' And '$(SignTool_Arg_Dlib)'==''"> /a </SignTool_Arg_Auto>
-            <SignTool_Arg_Auto Condition="'$(SignTool_Arg_Auto)'!='' And  '$(SignTool_AutoSelect_Issuer)'!=''">$(SignTool_Arg_Auto) /i $(SignTool_AutoSelect_Issuer) </SignTool_Arg_Auto>
-            
-            <SignTool_Args>$(SignTool_Arg_Auto) $(SignTool_Arg_PFX) $(SignTool_Arg_Password) $(SignTool_Arg_Description) $(SignTool_Arg_Dlib)</SignTool_Args>
         </PropertyGroup>
 
         <Message Text="SHA1  : %(SignTool_InputFiles_SHA1.FullPath)"   />
@@ -249,14 +231,14 @@
 
         <!-- 署名実行  -->
         <!--
-		<Exec Condition="'$(SignTool_Algorithm_SHA1)'=='true'   And '@(SignTool_InputFiles_SHA1->Count())'!='0'"   Command="&quot;$(SignTool_ExePath)&quot; sign /v /a     /t  $(SignTool_TimeStampServer) /fd SHA1              /d &quot;$(SignTool_Description)&quot; &quot;%(SignTool_InputFiles_SHA1.FullPath)&quot;"/>
-		<Exec Condition="'$(SignTool_Algorithm_SHA256)'=='true' And '@(SignTool_InputFiles_SHA256->Count())'!='0'" Command="&quot;$(SignTool_ExePath)&quot; sign /v /a     /tr $(SignTool_TimeStampServer) /td SHA256 /fd SHA256 /d &quot;$(SignTool_Description)&quot; &quot;%(SignTool_InputFiles_SHA256.FullPath)&quot;"/>
-		<Exec Condition="'$(SignTool_IsDual)'=='true'           And '@(SignTool_InputFiles_Dual->Count())'!='0'"   Command="&quot;$(SignTool_ExePath)&quot; sign /v /a /as /tr $(SignTool_TimeStampServer) /td SHA256 /fd SHA256 /d &quot;$(SignTool_Description)&quot; &quot;%(SignTool_InputFiles_Dual.FullPath)&quot;"/>
+		<Exec Condition="'$(SignTool_Algorithm_SHA1)'=='true'   And '@(SignTool_InputFiles_SHA1->Count())'!='0'"   Command="&quot;$(SignTool_ExePath)&quot; sign $(SignTool_Args)     /t  $(SignTool_TimeStampServer) /fd SHA1              &quot;%(SignTool_InputFiles_SHA1.FullPath)&quot;"/>
+		<Exec Condition="'$(SignTool_Algorithm_SHA256)'=='true' And '@(SignTool_InputFiles_SHA256->Count())'!='0'" Command="&quot;$(SignTool_ExePath)&quot; sign $(SignTool_Args)     /tr $(SignTool_TimeStampServer) /td SHA256 /fd SHA256 &quot;%(SignTool_InputFiles_SHA256.FullPath)&quot;"/>
+		<Exec Condition="'$(SignTool_IsDual)'=='true'           And '@(SignTool_InputFiles_Dual->Count())'!='0'"   Command="&quot;$(SignTool_ExePath)&quot; sign $(SignTool_Args) /as /tr $(SignTool_TimeStampServer) /td SHA256 /fd SHA256 &quot;%(SignTool_InputFiles_Dual.FullPath)&quot;"/>
 		-->
 
-        <Exec Condition="'$(SignTool_Algorithm_SHA1)'=='true'   And '@(SignTool_InputFiles_SHA1->Count())'!='0'"   Command="&quot;$(SignTool_ExePath)&quot; sign /v $(SignTool_Args)     /t  $(SignTool_TimeStampServer) /fd SHA1               $(SignTool_InputFiles_SHA1_Text)"/>
-        <Exec Condition="'$(SignTool_Algorithm_SHA256)'=='true' And '@(SignTool_InputFiles_SHA256->Count())'!='0'" Command="&quot;$(SignTool_ExePath)&quot; sign /v $(SignTool_Args)     /tr $(SignTool_TimeStampServer) /td SHA256 /fd SHA256  $(SignTool_InputFiles_SHA256_Text)"/>
-        <Exec Condition="'$(SignTool_IsDual)'=='true'           And '@(SignTool_InputFiles_Dual->Count())'!='0'"   Command="&quot;$(SignTool_ExePath)&quot; sign /v $(SignTool_Args) /as /tr $(SignTool_TimeStampServer) /td SHA256 /fd SHA256  $(SignTool_InputFiles_Dual_Text)"/>
+        <Exec Condition="'$(SignTool_Algorithm_SHA1)'=='true'   And '@(SignTool_InputFiles_SHA1->Count())'!='0'"   Command="&quot;$(SignTool_ExePath)&quot; sign $(SignTool_Args)     /t  $(SignTool_TimeStampServer) /fd SHA1              $(SignTool_InputFiles_SHA1_Text)"/>
+        <Exec Condition="'$(SignTool_Algorithm_SHA256)'=='true' And '@(SignTool_InputFiles_SHA256->Count())'!='0'" Command="&quot;$(SignTool_ExePath)&quot; sign $(SignTool_Args)     /tr $(SignTool_TimeStampServer) /td SHA256 /fd SHA256 $(SignTool_InputFiles_SHA256_Text)"/>
+        <Exec Condition="'$(SignTool_IsDual)'=='true'           And '@(SignTool_InputFiles_Dual->Count())'!='0'"   Command="&quot;$(SignTool_ExePath)&quot; sign $(SignTool_Args) /as /tr $(SignTool_TimeStampServer) /td SHA256 /fd SHA256 $(SignTool_InputFiles_Dual_Text)"/>
 
         <Message Condition="'$(SignTool_Verify)'=='true'" Text="＠＠＠＠＠ Verify Code Signing ＠＠＠＠＠" />
         <Exec Condition="'$(SignTool_Verify)'=='true' And '$(SignTool_Algorithm_SHA1)'=='true'   And '@(SignTool_InputFiles_SHA1->Count())'!='0'"   Command="&quot;$(SignTool_ExePath)&quot; verify /v /pa /tw $(SignTool_InputFiles_SHA1_Text)" />
@@ -278,19 +260,32 @@
 
             <SignTool_Dlib_Dll_Path    Condition="'$(SignTool_Dlib_Dll_Path)'=='' And '$([System.Environment]::Is64BitProcess)'!='true'">$(TrustedSigningDlibBinFolder)\x86\Azure.CodeSigning.Dlib.dll</SignTool_Dlib_Dll_Path>
             <SignTool_Dlib_Dll_Path    Condition="'$(SignTool_Dlib_Dll_Path)'=='' And '$([System.Environment]::Is64BitProcess)'=='true'">$(TrustedSigningDlibBinFolder)\x64\Azure.CodeSigning.Dlib.dll</SignTool_Dlib_Dll_Path>
+        </PropertyGroup>
 
+        <PropertyGroup>
+            <SignTool_Arg_PFX      Condition="'$(SignTool_PFX)'!=''"     > /f $(SignTool_PFX) </SignTool_Arg_PFX>
+            <SignTool_Arg_Password Condition="'$(SignTool_Password)'!=''"> /p $(SignTool_Password) </SignTool_Arg_Password>
+
+            <SignTool_Arg_Dlib Condition="'$(SignTool_Dlib_MetaJson_Path)'!=''"> /dlib &quot;$(SignTool_Dlib_Dll_Path)&quot; /dmdf &quot;$(SignTool_Dlib_MetaJson_Path)&quot;</SignTool_Arg_Dlib>
+
+            <SignTool_Arg_Description Condition="$(SignTool_Description)!=''" > /d &quot;$(SignTool_Description)&quot; </SignTool_Arg_Description>
+
+            <!-- PFXでもAzureでもない場合は証明書を自動選択に  -->
+            <SignTool_Arg_Auto Condition="'$(SignTool_Arg_PFX)'==''  And '$(SignTool_Arg_Password)'=='' And '$(SignTool_Arg_Dlib)'==''"> /a </SignTool_Arg_Auto>
+            <SignTool_Arg_Auto Condition="'$(SignTool_Arg_Auto)'!='' And '$(SignTool_AutoSelect_Issuer)'!=''" >$(SignTool_Arg_Auto) /i &quot;$(SignTool_AutoSelect_Issuer)&quot; </SignTool_Arg_Auto>
+            <SignTool_Arg_Auto Condition="'$(SignTool_Arg_Auto)'!='' And '$(SignTool_AutoSelect_Subject)'!=''">$(SignTool_Arg_Auto) /n &quot;$(SignTool_AutoSelect_Subject)&quot; </SignTool_Arg_Auto>
+            <SignTool_Args> /v $(SignTool_Arg_Auto) $(SignTool_Arg_PFX) $(SignTool_Arg_Password) $(SignTool_Arg_Description) $(SignTool_Arg_Dlib)</SignTool_Args>
+        </PropertyGroup>
+        
+        <PropertyGroup>
             <Properties>
                 SignTool_Algorithm_SHA1=$(SignTool_Algorithm_SHA1);
                 SignTool_Algorithm_SHA256=$(SignTool_Algorithm_SHA256);
                 SignTool_TimeStampServer=$(SignTool_TimeStampServer);
                 SignTool_ExePath=$(SignTool_ExePath);
-                SignTool_AutoSelect_Issuer=$(SignTool_AutoSelect_Issuer);
-                SignTool_PFX=$(SignTool_PFX);
-                SignTool_Password=$(SignTool_Password);
                 SignTool_Verify=$(SignTool_Verify);
-                SignTool_Dlib_Dll_Path=$(SignTool_Dlib_Dll_Path);
-                SignTool_Dlib_MetaJson_Path=$(SignTool_Dlib_MetaJson_Path);
-            </Properties>
+                SignTool_Args=$(SignTool_Args)
+            </Properties>            
         </PropertyGroup>
     </Target>
     <!-- ********************************************************** -->

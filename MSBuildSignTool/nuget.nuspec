@@ -5,7 +5,7 @@
         <id>Gekka.MSBuild.targets.SignTool</id>
         <version>0.0.0.0-preview</version>
         <description>
-                This package adds MSBuild task in project file for sign project output or publis file at release build using signtool.exe .&#xd;&#xa;&#xd;&#xa;Releaseビルドで出力または発行されたファイルにsigntool.exeで署名を実行するMSBuildのタスクを追加します
+            This package add MSBuild task in project file for sign using signtool.exe to project output files or published files at release build. &#xd;&#xa;&#xd;&#xa;Releaseビルドで出力または発行されたファイルにsigntool.exeで署名を実行するMSBuildのタスクを追加します
         </description>
         <authors>gekka</authors>
         <copyright>gekka</copyright>

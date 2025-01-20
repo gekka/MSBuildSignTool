@@ -12,6 +12,7 @@ This targets can sign to output file and publish file.
 - Sign using Azure Trust Signing.
 - Sign in Github Actions.
 - Support Dual sign (SHA1 + SHA256).
+- Auto select multiple output files (exe+dll , exe+msi)
 
 ## Requirement
 The signtool.exe must be installed, e.g., with the Windows SDK.  
@@ -26,12 +27,20 @@ You can change the settings by adding them in the project file.
 ```xml
 <Project >
     <PropertyGroup>
+        <SingTool_EnableSign_Build   >true</SingTool_EnableSign_Build>
+        <SingTool_EnableSign_Publish >true</SingTool_EnableSign_Publish>
+        <SingTool_EnableSign_Nupkg   >true</SingTool_EnableSign_Nupkg>
+
+        <SignTool_ExePath></SignTool_ExePath>
+
         <SignTool_TimeStampServer></SignTool_TimeStampServer>
         <SignTool_Algorithm_SHA1>false</SignTool_Algorithm_SHA1>
         <SignTool_Algorithm_SHA256>true</SignTool_Algorithm_SHA256>
-        <SignTool_ExePath>path to signtool.exe</SignTool_ExePath>
+        
+        <SignTool_AutoSelect_Subject ></SignTool_AutoSelect_Subject>
+        <SignTool_AutoSelect_Issuer  ></SignTool_AutoSelect_Issuer>
 
-        <!-- For use PFX and passwork -->
+        <!-- For use PFX and password -->
         <SignTool_PFX      ></SignTool_PFX>
         <SignTool_Password ></SignTool_Password>
 
@@ -95,6 +104,8 @@ You can change the settings by adding them in the project file.
 - .cab
 - .cat
 - .efi
+
+- PE files
 
 ### Only one of SHA1 or SHA256
 
