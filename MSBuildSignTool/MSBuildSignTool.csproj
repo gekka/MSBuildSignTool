@@ -28,7 +28,7 @@
 		<Message Text="＠＠＠＠＠ Start Sign Nuget Package ＠＠＠＠＠"/>
 		<PropertyGroup>
 			<SignTool_TimeStampServer  Condition="'$(SignTool_TimeStampServer)'==''" >http://timestamp.digicert.com</SignTool_TimeStampServer>
-			<SignTool_Nuget_FingerPring>fc68c8b92b1e7ef4df7d94c580f43ed949874513</SignTool_Nuget_FingerPring>
+			<SignTool_Nuget_FingerPrint>*********</SignTool_Nuget_FingerPrint>
 		</PropertyGroup>
 
 		<PropertyGroup>
