@@ -1,5 +1,5 @@
 {
   "Endpoint": "https://wus2.codesigning.azure.net",
-  "CodeSigningAccountName": "** Trusted Signing Account Name (unique in world) **",
-  "CertificateProfileName": "** profile name **"
+  "CodeSigningAccountName": "sibata-testsign",
+  "CertificateProfileName": "TestCert20241225"
 }

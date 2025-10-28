@@ -10,9 +10,7 @@
 		<Configurations>Release;Degug</Configurations>
 		<PackageVersion>0.0.0.0</PackageVersion>
 
-		<!-- <SignTool_Algorithm_SHA1>false</SignTool_Algorithm_SHA1> -->
-		<!-- <SignTool_Algorithm_SHA256>true</SignTool_Algorithm_SHA256> -->
-		<DisableFastUpToDateCheck Condition="$(Configuration.Contains(&quot;Release&quot;))">true</DisableFastUpToDateCheck>
+		<DisableFastUpToDateCheck Condition="$(Configuration.Contains(&quot;Release&quot;))">true</DisableFastUpToDateCheck>		
 	</PropertyGroup>
 
 	<Target Name="SignTool_CleanTestFiles" AfterTargets="Clean" DependsOnTargets="Clean">
@@ -29,7 +27,7 @@
 		<Unzip SourceFiles="TestInputFiles\TestFiles.zip" DestinationFolder="$(ProjectDir)\bin\TestInputFiles\"  />
 		<ItemGroup>
 			<!-- 実際にSignToolに渡して署名するファイルを登録 -->
-			<SignTool_InputFiles Include="bin\TestInputFiles\*"  />
+			<Gekka_SignTool_InputFiles Include="bin\TestInputFiles\*"  />
 		</ItemGroup>
 	</Target>
 

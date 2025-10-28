@@ -1,389 +1,806 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<!-- MIT License
-	Copyright 2024 gekka
+<Project version="1.1" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<!--<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003"
+		InitialTargets="precheck"
+		DefaultTargets="Build">-->
 
-	Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-	The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-	THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
--->
+	<PropertyGroup>
+		<!--<Configuration Condition="'$(Configuration)'==''">Release</Configuration>-->
 
-<Project >
+		<Gekka_SignTool_EnableSign_Build>true</Gekka_SignTool_EnableSign_Build>
+		<Gekka_SignTool_EnableSign_Publish Condition="'$(Gekka_SignTool_EnableSign_Publish)'==''">false</Gekka_SignTool_EnableSign_Publish>
+		<Gekka_SignTool_EnableSign_Nupkg Condition="'$(Gekka_SignTool_EnableSign_Nupkg)'==''">false</Gekka_SignTool_EnableSign_Nupkg>
 
-    <PropertyGroup>
-        <SingTool_EnableSign_Build    Condition="'$(SingTool_EnableSign_Build)'==''"  >true</SingTool_EnableSign_Build>
-        <SingTool_EnableSign_Publish  Condition="'$(SingTool_EnableSign_Publish)'==''">true</SingTool_EnableSign_Publish>
-        <SingTool_EnableSign_Nupkg    Condition="'$(SingTool_EnableSign_Nupkg)'==''"  >true</SingTool_EnableSign_Nupkg>
+		<Gekka_SignTool_ExePath></Gekka_SignTool_ExePath>
+		<Gekka_SignTool_TimeStampServer Condition="'$(Gekka_SignTool_TimeStampServer )'==''"></Gekka_SignTool_TimeStampServer>
+		<Gekka_SignTool_Algorithms Condition="'$(Gekka_SignTool_Algorithms)'==''">SHA1;SHA256</Gekka_SignTool_Algorithms>
+		<!--<Gekka_SignTool_Algorithms Condition="'$(Gekka_SignTool_Algorithms)'==''">SHA1;SHA256;SHA384;SHA512</Gekka_SignTool_Algorithms>-->
 
-        <SignTool_ExePath             Condition="'$(SignTool_ExePath)'==''"></SignTool_ExePath>
+		<!-- signtoolが /a で選択する証明書を確定させたい場合に、その証明書の発行者名を指定する部分文字列 (/i に渡す文字列)-->
+		<Gekka_SignTool_AutoSelect_Issuer Condition="'$(Gekka_SignTool_AutoSelect_Issuer)'==''"></Gekka_SignTool_AutoSelect_Issuer>
+		<!-- signtoolが /a で選択する証明書を確定させたい場合に、その証明書のサブジェクトを指定する部分文字列 (/n に渡す文字列)-->
+		<Gekka_SignTool_AutoSelect_Subject Condition="'$(Gekka_SignTool_AutoSelect_Subject)'==''"></Gekka_SignTool_AutoSelect_Subject>
 
-        <SignTool_TimeStampServer     Condition="'$(SignTool_TimeStampServer)'==''" ></SignTool_TimeStampServer>
-        <SignTool_Algorithm_SHA1      Condition="'$(SignTool_Algorithm_SHA1)'==''"  >false</SignTool_Algorithm_SHA1>
-        <SignTool_Algorithm_SHA256    Condition="'$(SignTool_Algorithm_SHA256)'==''">true</SignTool_Algorithm_SHA256>
 
-     
+		<!-- PFXとパスワードで署名する場合  -->
+		<Gekka_SignTool_PFX Condition="'$(Gekka_SignTool_PFX)'==''"></Gekka_SignTool_PFX>
+		<Gekka_SignTool_Password Condition="'$(Gekka_SignTool_Password)'==''"></Gekka_SignTool_Password>
 
-        <!-- signtoolが /a で選択する証明書を確定させたい場合に、その証明書のサブジェクトを指定する部分文字列 (/n に渡す文字列)-->
-        <SignTool_AutoSelect_Subject  Condition="'$(SignTool_AutoSelect_Subject)'==''"></SignTool_AutoSelect_Subject>
-        <!-- signtoolが /a で選択する証明書を確定させたい場合に、その証明書の発行者名を指定する部分文字列 (/i に渡す文字列)-->
-        <SignTool_AutoSelect_Issuer   Condition="'$(SignTool_AutoSelect_Issuer)'==''"></SignTool_AutoSelect_Issuer>
+		<!-- Azure Trust Signingで署名する場合 -->
+		<Gekka_SignTool_Dlib_Dll_Path Condition="'$(Gekka_SignTool_Dlib_Dll_Path)'==''"></Gekka_SignTool_Dlib_Dll_Path>
+		<Gekka_SignTool_Dlib_MetaJson_Path Condition="'$(Gekka_SignTool_Dlib_MetaJson_Path)'==''"></Gekka_SignTool_Dlib_MetaJson_Path>
 
-        <!-- PFXとパスワードで署名する場合  -->
-        <SignTool_PFX      Condition="$(SignTool_PFX)==''"></SignTool_PFX>
-        <SignTool_Password Condition="$(SignTool_Password)==''"></SignTool_Password>
+		<!-- signtool.exeの /d に渡す文字列-->
+		<Gekka_SignTool_Description Condition="'$(Gekka_SignTool_Description)'==''"></Gekka_SignTool_Description>
 
-        <!-- Azure Trust Signingで署名する場合 -->
-        <SignTool_Dlib_Dll_Path      Condition="'$(SignTool_Dlib_Dll_Path)'==''"></SignTool_Dlib_Dll_Path>
-        <SignTool_Dlib_MetaJson_Path Condition="'$(SignTool_Dlib_MetaJson_Path)'==''"></SignTool_Dlib_MetaJson_Path>
+		<!-- 署名後にベリファイを行うか  -->
+		<Gekka_SignTool_Verify Condition="'$(Gekka_SignTool_Verify)'==''">false</Gekka_SignTool_Verify>
 
-        <!-- signtool.exeの /d に渡す文字列-->
-        <SignTool_Arg_Description Condition="'$(SignTool_Arg_Description)'==''" ></SignTool_Arg_Description>
+		<Gekka_SignTool_UseMutex Condition="'$(Gekka_SignTool_UseMutex)'==''">false</Gekka_SignTool_UseMutex>
 
-        <!-- 署名後にベリファイを行うか  -->
-        <SignTool_Verify Condition="'$(SignTool_Verify)'==''">false</SignTool_Verify>
 
-        <!--
-        <SignTool_Nupkg_FingerPrint></SignTool_Nupkg_FingerPrint>
-		<SignTool_Nupkg_SubjectName></SignTool_Nupkg_SubjectName>
-		<SignTool_Nupkg_StoreName></SignTool_Nupkg_StoreName>
-		<SignTool_Nupkg_StoreLocation></SignTool_Nupkg_StoreLocation>
-		<SignTool_Nupkg_Pfx_Path></SignTool_Nupkg_Pfx_Path>
-		<SignTool_Nupkg_Password></SignTool_Nupkg_Password>
-		<SignTool_DelaySign></SignTool_DelaySign>
+		<!--
+        <Gekka_SignTool_Nupkg_FingerPrint></Gekka_SignTool_Nupkg_FingerPrint>
+		<Gekka_SignTool_Nupkg_SubjectName></Gekka_SignTool_Nupkg_SubjectName>
+		<Gekka_SignTool_Nupkg_StoreName></Gekka_SignTool_Nupkg_StoreName>
+		<Gekka_SignTool_Nupkg_StoreLocation></Gekka_SignTool_Nupkg_StoreLocation>
+		<Gekka_SignTool_Nupkg_Pfx_Path></Gekka_SignTool_Nupkg_Pfx_Path>
+		<Gekka_SignTool_Nupkg_Password></Gekka_SignTool_Nupkg_Password>
+		
+		<Gekka_SignTool_DelaySign></Gekka_SignTool_DelaySign>
         -->
-    </PropertyGroup>
 
-    <!-- 署名可能なファイルの拡張子  -->
-    <PropertyGroup>
-        <!-- ２重署名可能 -->
-        <SignTool_SupportedExtensions_Dual>.exe;.dll;.ocx;.scr;.sys;.cab;.cat;.efi;</SignTool_SupportedExtensions_Dual>
-        <!-- 1種類しか署名できない -->
-        <SignTool_SupportedExtensions_Single>.msi;.ps1;.vbs;.vbe;.js;</SignTool_SupportedExtensions_Single>
-        <!-- SHA256でしか署名できない -->
-        <SignTool_SupportedExtensions_Only256>.msix;.msixbundle;.appx;.appxbundle;</SignTool_SupportedExtensions_Only256>
-    </PropertyGroup>
+		<!-- デバッグ用フラグ  -->
+		<Gekka_SignTool_IsScriptDebug Condition="'$(Gekka_SignTool_IsScriptDebug)'=='true'">true</Gekka_SignTool_IsScriptDebug>
+	</PropertyGroup>
 
-    <ItemDefinitionGroup>
-        <SignTool_InputFiles  />
-    </ItemDefinitionGroup>
+	<ItemDefinitionGroup>
+		<Gekka_SignTool_InputFiles />
+	</ItemDefinitionGroup>
 
+	<!-- *************************************   -->
 
+	<!-- ビルド後の署名を実行 -->
+	<Target Name="Gekka_SignTool_After_Build" AfterTargets="Build" DependsOnTargets="Gekka_SignTool_GetInputFiles_ForBuild;Gekka_SignTool_GetSignToolExePath" Condition="'$(IsCrossTargetingBuild)'!='true' And $(OS.Contains('Windows')) And '$(Gekka_SignTool_EnableSign_Build)'=='true'">
 
-    <!-- ビルド後の署名を実行 -->
-    <!-- 2回目にTargetPathがブランクで実行されるの場合がある(?)ので注意する -->
-    <Target Name="SignTool_After_Build" AfterTargets="Build"
-			Condition="'$(SingTool_EnableSign_Build)'=='true' And '@(SignTool_ExePaths->Count())'!='0' And '@(SignTool_InputFiles_Temp->Count())'!='0' And '$(TargetPath)'!=''"
-			DependsOnTargets="SignTool_GetInputFiles_ForBuild;SignTool_GetSignToolExePath;">
+		<Message Text="＠＠＠＠＠ Start Code Signing(Build) ＠＠＠＠＠" />
 
-        <Message Text="＠＠＠＠＠ Start Code Signing(Build) ＠＠＠＠＠" />
+		<PropertyGroup>
+			<Gekka_SignTool_TargetObjPath>$(IntermediateOutputPath)$(TargetFileName)</Gekka_SignTool_TargetObjPath>
+		</PropertyGroup>
 
-        <CallTarget Targets="SignTool_Get_m_Properties"  >            
-            <Output TaskParameter="TargetOutputs" PropertyName="m_Properties"/>
-        </CallTarget>
-        
-        <PropertyGroup>
-            <SignTool_TargetObjPath >$(IntermediateOutputPath)$(TargetFileName)</SignTool_TargetObjPath >
-            <PP_SignTool_InputFiles_Temp>@(SignTool_InputFiles_Temp)</PP_SignTool_InputFiles_Temp>
-            <m_Properties>$(m_Properties);PP_SignTool_InputFiles_Temp=$(PP_SignTool_InputFiles_Temp)</m_Properties>
-        </PropertyGroup>
+		<Message Text="InputFiles==%(Gekka_SignTool_InputFiles_Temp.Identity)" />
 
-        <Exec Condition="'$(SignTool_DelaySign)'!=''" Command="ping 127.0.0.1 -n $(SignTool_DelaySign) &gt; nul " />
+		<Gekka.MSBuild.SignTool SigntoolExePath="$(Gekka_SignTool_ExePath)" InputFiles="@(Gekka_SignTool_InputFiles_Temp)" Algorithms="$(Gekka_SignTool_Algorithms)" TimeStampServer="$(Gekka_SignTool_TimeStampServer)" PFXPath="$(Gekka_SignTool_PFX)" Password="$(Gekka_SignTool_Password)" TrustedSigningDlibBinFolder="$(Gekka_SignTool_Dlib_Dll_Path)" DlibPathMetaJson="$(Gekka_SignTool_Dlib_MetaJson_Path)" Description="$(Gekka_SignTool_Description)" Issuer="$(Gekka_SignTool_AutoSelect_Issuer)" Subject="$(Gekka_SignTool_AutoSelect_Subject)" IsScriptDebug="$(Gekka_SignTool_IsScriptDebug)" UseMutex="$(Gekka_SignTool_UseMutex)" />
 
-        <MSBuild  Projects="$(MSBuildProjectFullPath)"
-				  Targets="SignTool_Work"
-                  Properties="$(m_Properties)"  />
+		<!-- objフォルダに作られた出力ファイルをbinの出力ファイルへコピー -->
+		<Copy Condition="'$(TargetFileName)'!='' And Exists($(Gekka_SignTool_TargetObjPath))" SourceFiles="$(Gekka_SignTool_TargetObjPath)" DestinationFiles="$(TargetPath)" />
+	</Target>
 
-        <!-- objフォルダに作られた出力ファイルをbinの出力ファイルへコピー -->
-        <Copy Condition="'$(TargetFileName)'!='' And Exists($(SignTool_TargetObjPath))"
-			  SourceFiles="$(SignTool_TargetObjPath)"
-			  DestinationFiles="$(TargetPath)" />
-    </Target>
+	<!-- 発行後の署名を実行 -->
+	<Target Name="Gekka_SignTool_After_Publish" AfterTargets="Publish" DependsOnTargets="Gekka_SignTool_GetInputFiles_ForPublish;Gekka_SignTool_GetSignToolExePath" Condition="'$(IsCrossTargetingBuild)'!='true' And $(OS.Contains('Windows')) And '$(Gekka_SignTool_EnableSign_Publish)'=='true'">
 
-    <!-- 発行後の署名を実行 -->
-    <Target Name="SignTool_After_Publish" AfterTargets="Publish"
-			Condition="'$(SingTool_EnableSign_Publish)'=='true' And $(OS.Contains('Windows')) And '$(Configuration.Contains(&quot;Release&quot;))' And '$(TargetPath)'!='' And Exists('$(DevEnvDir)..\Tools\VsDevCmd.bat')"
-			DependsOnTargets="SignTool_GetInputFiles_ForPublish;SignTool_GetSignToolExePath">
+		<Message Text="＠＠＠＠＠ Start Code Signing(Publish) ＠＠＠＠＠" />
 
-        <Message Text="＠＠＠＠＠ Start Code Signing(Publish) ＠＠＠＠＠" />
-        <Message Text="PublishedSingleFilePath=$(PublishedSingleFilePath)" Importance="high" />
+		<!--<PropertyGroup>
+			<Gekka_SignTool_TargetObjPath>$(IntermediateOutputPath)$(TargetFileName)</Gekka_SignTool_TargetObjPath>
+		</PropertyGroup>-->
 
-        <CallTarget Targets="SignTool_Get_m_Properties"  >
-            <Output TaskParameter="TargetOutputs" PropertyName="m_Properties"/>
-        </CallTarget>
-        
-        <PropertyGroup>
-            <PP_SignTool_InputFiles_Temp>@(SignTool_InputFiles_Temp)</PP_SignTool_InputFiles_Temp>
-            <m_Properties>$(m_Properties);PP_SignTool_InputFiles_Temp=$(PP_SignTool_InputFiles_Temp)</m_Properties>
-        </PropertyGroup>
+		<Message Text="InputFiles==%(Gekka_SignTool_InputFiles_Temp.Identity)" />
 
-        <Exec Condition="'$(SignTool_DelaySign)'!=''" Command="ping 127.0.0.1 -n $(SignTool_DelaySign) &gt; nul " />
+		<Gekka.MSBuild.SignTool SigntoolExePath="$(Gekka_SignTool_ExePath)" InputFiles="@(Gekka_SignTool_InputFiles_Temp)" Algorithms="$(Gekka_SignTool_Algorithms)" TimeStampServer="$(Gekka_SignTool_TimeStampServer)" PFXPath="$(Gekka_SignTool_PFX)" Password="$(Gekka_SignTool_Password)" TrustedSigningDlibBinFolder="$(Gekka_SignTool_Dlib_Dll_Path)" DlibPathMetaJson="$(Gekka_SignTool_Dlib_MetaJson_Path)" Description="$(Gekka_SignTool_Description)" Issuer="$(Gekka_SignTool_AutoSelect_Issuer)" Subject="$(Gekka_SignTool_AutoSelect_Subject)" IsScriptDebug="$(Gekka_SignTool_IsScriptDebug)" UseMutex="$(Gekka_SignTool_UseMutex)" />
+	</Target>
 
-        <MSBuild  Condition="'$(PublishedSingleFilePath)'!=''"
-				  Projects="$(MSBuildProjectFullPath)"
-				  Targets="SignTool_Work"
-				  Properties="$(m_Properties)" />
-    </Target>
+	<!-- nupkgに署名する場合 -->
+	<Target Name="SignTool_SignPackage" AfterTargets="Pack" Condition="'$(IsCrossTargetingBuild)'!='true' And '$(SingTool_EnableSign_Nupkg)'=='true' And $(Configuration.Contains(&quot;Release&quot;))">
 
+		<Message Text="＠＠＠＠＠ Start Sign Nuget Package ＠＠＠＠＠" />
 
-    <!-- nupkgに署名する場合 -->
-    <Target Name="SignTool_SignPackage" AfterTargets="Pack"
-			Condition="'$(SingTool_EnableSign_Nupkg)'=='true' And $(Configuration.Contains(&quot;Release&quot;))">
+		<ItemGroup>
+			<m_Debug_message Include="SignTool_TimeStampServer     =$(Gekka_SignTool_TimeStampServer)" />
+			<m_Debug_message Include="SignTool_Nupkg_FingerPrint   =$(Gekka_SignTool_Nupkg_FingerPrint)" />
+			<m_Debug_message Include="SignTool_Nupkg_SubjectName   =$(Gekka_SignTool_Nupkg_SubjectName)" />
+			<m_Debug_message Include="SignTool_Nupkg_StoreName     =$(Gekka_SignTool_Nupkg_StoreName&gt;)" />
+			<m_Debug_message Include="SignTool_Nupkg_StoreLocation =$(Gekka_SignTool_Nupkg_StoreLocation)" />
+			<m_Debug_message Include="SignTool_Nupkg_Pfx_Path      =$(Gekka_SignTool_Nupkg_Pfx_Path)" />
+			<!--<m_Debug_message Include="SignTool_Nupkg_Password      =$(Gekka_SignTool_Nupkg_Password" />-->
+		</ItemGroup>
+		<Message Condition="'$(Gekka_SignTool_IsScriptDebug)'=='true'" Importance="high" Text=" *** %(m_Debug_message.Identity)" />
+		<ItemGroup>
+			<m_Debug_message Remove="%(m_Debug_message.Identity)" />
+		</ItemGroup>
 
-        <Message Text="＠＠＠＠＠ Start Sign Nuget Package ＠＠＠＠＠"/>
+		<PropertyGroup>
+			<SignTool_TimeStampServer Condition="'$(SignTool_TimeStampServer)'==''">http://timestamp.digicert.com</SignTool_TimeStampServer>
+		</PropertyGroup>
 
-        <Message Text="SignTool_TimeStampServer     =$(SignTool_TimeStampServer)" />
-        <Message Text="SignTool_Nupkg_FingerPrint   =$(SignTool_Nupkg_FingerPrint)" />
-        <Message Text="SignTool_Nupkg_SubjectName   =$(SignTool_Nupkg_SubjectName)" />
-        <Message Text="SignTool_Nupkg_StoreName     =$(SignTool_Nupkg_StoreName>)" />
-        <Message Text="SignTool_Nupkg_StoreLocation =$(SignTool_Nupkg_StoreLocation)" />
-        <Message Text="SignTool_Nupkg_Pfx_Path      =$(SignTool_Nupkg_Pfx_Path)" />
-        <!--<Message Text="SignTool_Nupkg_Password      =$(SignTool_Nupkg_Password)" />-->
+		<PropertyGroup>
+			<SignTool_Nupkg_Arg_TimeStampServer Condition="'$(SignTool_TimeStampServer)'!=''"> --timestamper $(SignTool_TimeStampServer) </SignTool_Nupkg_Arg_TimeStampServer>
 
-        <PropertyGroup>
-            <SignTool_TimeStampServer  Condition="'$(SignTool_TimeStampServer)'==''" >http://timestamp.digicert.com</SignTool_TimeStampServer>
-        </PropertyGroup>
+			<SignTool_Nupkg_Arg_FingerPrint Condition="'$(SignTool_Nupkg_FingerPrint)'!=''"> --certificate-fingerprint   $(SignTool_Nupkg_FingerPrint) </SignTool_Nupkg_Arg_FingerPrint>
 
-        <PropertyGroup>
-            <SignTool_Nupkg_Arg_TimeStampServer Condition="'$(SignTool_TimeStampServer)'!=''"> --timestamper $(SignTool_TimeStampServer) </SignTool_Nupkg_Arg_TimeStampServer>
+			<SignTool_Nupkg_SubjectName Condition="$(SignTool_Nupkg_SubjectName.Trim().Contains(' ')) And !$(SignTool_Nupkg_SubjectName.Trim().StartsWith('&quot;'))">"$(SignTool_Nupkg_SubjectName.Trim())"</SignTool_Nupkg_SubjectName>
+			<SignTool_Nupkg_Arg_SubjectName Condition="'$(SignTool_Nupkg_SubjectName)'!=''"> --certificate-subject-name  $(SignTool_Nupkg_SubjectName) </SignTool_Nupkg_Arg_SubjectName>
 
-            <SignTool_Nupkg_Arg_FingerPrint Condition="'$(SignTool_Nupkg_FingerPrint)'!=''"   > --certificate-fingerprint   $(SignTool_Nupkg_FingerPrint) </SignTool_Nupkg_Arg_FingerPrint>
+			<SignTool_Nupkg_Arg_StoreName Condition="'$(SignTool_Nupkg_StoreName)'!=''"> --certificate-store-name     $(SignTool_Nupkg_StoreName) </SignTool_Nupkg_Arg_StoreName>
+			<SignTool_Nupkg_Arg_StoreLocation Condition="'$(SignTool_Nupkg_SubjectName)'!=''"> --certificate-store-location $(SignTool_Nupkg_SubjectName) </SignTool_Nupkg_Arg_StoreLocation>
 
-            <SignTool_Nupkg_SubjectName     Condition="$(SignTool_Nupkg_SubjectName.Trim().Contains(' ')) And !$(SignTool_Nupkg_SubjectName.Trim().StartsWith('&quot;'))">&quot;$(SignTool_Nupkg_SubjectName.Trim())&quot;</SignTool_Nupkg_SubjectName>
-            <SignTool_Nupkg_Arg_SubjectName Condition="'$(SignTool_Nupkg_SubjectName)'!=''"   > --certificate-subject-name  $(SignTool_Nupkg_SubjectName) </SignTool_Nupkg_Arg_SubjectName>
-
-            <SignTool_Nupkg_Arg_StoreName     Condition="'$(SignTool_Nupkg_StoreName)'!=''"   > --certificate-store-name     $(SignTool_Nupkg_StoreName) </SignTool_Nupkg_Arg_StoreName>
-            <SignTool_Nupkg_Arg_StoreLocation Condition="'$(SignTool_Nupkg_SubjectName)'!=''" > --certificate-store-location $(SignTool_Nupkg_SubjectName) </SignTool_Nupkg_Arg_StoreLocation>
-
-            <SignTool_Nupkg_Arg_Pfx_Path Condition="'$(SignTool_Nupkg_Pfx_Path)'!=''"> --certificate-path     $(SignTool_Nupkg_Pfx_Path) </SignTool_Nupkg_Arg_Pfx_Path>
-            <SignTool_Nupkg_Arg_Password Condition="'$(SignTool_Nupkg_Password)'!=''"> --certificate-password $(SignTool_Nupkg_Password) </SignTool_Nupkg_Arg_Password>
+			<SignTool_Nupkg_Arg_Pfx_Path Condition="'$(SignTool_Nupkg_Pfx_Path)'!=''"> --certificate-path     $(SignTool_Nupkg_Pfx_Path) </SignTool_Nupkg_Arg_Pfx_Path>
+			<SignTool_Nupkg_Arg_Password Condition="'$(SignTool_Nupkg_Password)'!=''"> --certificate-password %QXPASSWORD% </SignTool_Nupkg_Arg_Password>
 
 
-            <SignTool_NupkgPath>$(PackageOutputAbsolutePath)$(PackageId).$(PackageVersion).nupkg</SignTool_NupkgPath>
-        </PropertyGroup>
+			<SignTool_NupkgPath>$(PackageOutputAbsolutePath)$(PackageId).$(PackageVersion).nupkg</SignTool_NupkgPath>
+		</PropertyGroup>
 
-        <Exec Condition="Exists($(SignTool_NupkgPath))"
-			  Command="dotnet nuget sign $(SignTool_Nupkg_Arg_TimeStampServer) $(SignTool_Nupkg_Arg_FingerPrint) $(SignTool_Nupkg_Arg_SubjectName) $(SignTool_Nupkg_Arg_StoreName) $(SignTool_Nupkg_Arg_StoreLocation) $(SignTool_Nupkg_Arg_Pfx_Path) $(SignTool_Nupkg_Arg_Password) -v:diag &quot;$(SignTool_NupkgPath)&quot;"
-			  StdOutEncoding="UTF-8"/>
+		<Exec Condition="Exists($(SignTool_NupkgPath))" Command="dotnet nuget sign $(SignTool_Nupkg_Arg_TimeStampServer) $(SignTool_Nupkg_Arg_FingerPrint) $(SignTool_Nupkg_Arg_SubjectName) $(SignTool_Nupkg_Arg_StoreName) $(SignTool_Nupkg_Arg_StoreLocation) $(SignTool_Nupkg_Arg_Pfx_Path) $(SignTool_Nupkg_Arg_Password) -v:diag &quot;$(SignTool_NupkgPath)&quot;" StdOutEncoding="UTF-8" EnvironmentVariables="QXPASSWORD=$(SignTool_Nupkg_Password)" />
 
-        <Exec Condition="$(SignTool_Verify)=='true' And Exists($(SignTool_NupkgPath))"
-			  Command="dotnet nuget verify -v:diag &quot;$(SignTool_NupkgPath)&quot;"
-			  StdOutEncoding="UTF-8"/>
-    </Target>
+		<Exec Condition="'$(SignTool_Verify)'=='true' And Exists($(SignTool_NupkgPath))" Command="dotnet nuget verify -v:diag &quot;$(SignTool_NupkgPath)&quot;" StdOutEncoding="UTF-8" />
+	</Target>
 
-    <!-- ********************************************************** -->
+	<!-- *************************************   -->
 
-    <!-- ファイルに署名と検証 -->
-    <!--
-		必要なプロパティ
-			SignTool_Algorithm_SHA1
-			SignTool_Algorithm_SHA256
-			SignTool_TimeStampServer
-			SignTool_ExePath
-			PP_SignTool_InputFiles_Temp
-			
-		オプション	
-            SignTool_Verify
-            SignTool_Args
-	-->
-    <Target Name="SignTool_Work">
-        <Message Text="＠＠＠＠＠ Start Code Signing ＠＠＠＠＠" />
+	<!-- 開発者コマンドプロンプトのように開発ツールへのパスが通っている状態にするバッチファイルを見つける  -->
+	<!-- 見つかったバッチファイルのパスは Gekka_SignTool_DevBatchFilePath プロパティにセット -->
+	<Target Name="Gekka_SignTool_GetDevBatchFilePath" Condition="'$(IsCrossTargetingBuild)'!='true' AND '$(Gekka_SignTool_DevBatchFilePath)'=='' AND $(OS.Contains('Windows')) And ('$(Gekka_SignTool_EnableSign_Build)'=='true' or '$(Gekka_SignTool_EnableSign_Publish)'=='true')">
 
-        <Message Importance="low" Text="SignTool_Algorithm_SHA1=$(SignTool_Algorithm_SHA1)" />
-        <Message Importance="low" Text="SignTool_Algorithm_SHA256=$(SignTool_Algorithm_SHA256)" />
-        <Message Importance="low" Text="SignTool_TimeStampServer=$(SignTool_TimeStampServer)"/>
-        <Message Importance="low" Text="SignTool_ExePath=$(SignTool_ExePath)"/>
-
-        <Message Importance="low" Text="SignTool_Verify=$(SignTool_Verify)"/>
-        <Message Importance="low" Text="SignTool_Args=$(SignTool_Args)"/>
-                
-        <PropertyGroup>
-            <!-- SHA1とSHA256を同時に署名するか-->
-            <SignTool_IsDual Condition="$(SignTool_Algorithm_SHA1)=='true' And $(SignTool_Algorithm_SHA256)=='true' ">true</SignTool_IsDual>
-        </PropertyGroup>
-
-        <ItemGroup>
-            <SignTool_InputFiles_Temp Remove ="$(SignTool_InputFiles_Temp.Identity)" />
-            <SignTool_InputFiles_Temp Include="$(PP_SignTool_InputFiles_Temp)" />
-
-            <!-- 署名の種類ごとに分類 -->
-            <SignTool_InputFiles_SHA1   Include="%(SignTool_InputFiles_Temp.Identity)"  Condition="$(SignTool_SupportedExtensions_Dual.Contains(&quot;%(Extension);&quot;))" />
-            <SignTool_InputFiles_SHA256 Include="%(SignTool_InputFiles_Temp.Identity)"  Condition="$(SignTool_SupportedExtensions_Dual.Contains(&quot;%(Extension);&quot;)) And '$(SignTool_IsDual)'!='true'" />
-            <SignTool_InputFiles_Dual   Include="%(SignTool_InputFiles_Temp.Identity)"  Condition="$(SignTool_SupportedExtensions_Dual.Contains(&quot;%(Extension);&quot;)) And '$(SignTool_IsDual)'=='true'"  />
-
-            <SignTool_InputFiles_SHA1   Include="%(SignTool_InputFiles_Temp.Identity)"  Condition="$(SignTool_SupportedExtensions_Single.Contains(&quot;%(Extension);&quot;)) And '$(SignTool_Algorithm_SHA256)'!='true'" />
-            <SignTool_InputFiles_SHA256 Include="%(SignTool_InputFiles_Temp.Identity)"  Condition="$(SignTool_SupportedExtensions_Single.Contains(&quot;%(Extension);&quot;)) And '$(SignTool_Algorithm_SHA256)'=='true'"  />
-
-            <SignTool_InputFiles_SHA256 Include="%(SignTool_InputFiles_Temp.Identity)"  Condition="$(SignTool_SupportedExtensions_Only256.Contains(&quot;%(Extension);&quot;)) And '$(SignTool_Algorithm_SHA256)'=='true'"  />
-        </ItemGroup>
-
-        <Error Condition="'@(SignTool_InputFiles_SHA1->Count())'=='0' And @(SignTool_InputFiles_SHA256->Count())=='0'" Text="SignTool input file is empty" />
-
-        <PropertyGroup>
-            <!-- Execに渡せるようにファイルパスをスペース区切りの文字列化。 (8000文字くらいでコマンドラインの限界になるはず)-->
-            <SignTool_InputFiles_SHA1_Text  >@(SignTool_InputFiles_SHA1  ->'&quot;%(FullPath)&quot;', ' ')</SignTool_InputFiles_SHA1_Text>
-            <SignTool_InputFiles_SHA256_Text>@(SignTool_InputFiles_SHA256->'&quot;%(FullPath)&quot;', ' ')</SignTool_InputFiles_SHA256_Text>
-            <SignTool_InputFiles_Dual_Text>@(SignTool_InputFiles_Dual->'&quot;%(FullPath)&quot;', ' ')</SignTool_InputFiles_Dual_Text>
-            <SignTool_InputFiles_All>@(SignTool_InputFiles_Temp->'&quot;%(FullPath)&quot;', ' ')</SignTool_InputFiles_All>
-        </PropertyGroup>
-
-        <Message Text="SHA1  : %(SignTool_InputFiles_SHA1.FullPath)"   />
-        <Message Text="SHA256: %(SignTool_InputFiles_SHA256.FullPath)" />
-        <Message Text="Dual  : %(SignTool_InputFiles_Dual.FullPath)" />
-
-        <!-- 署名実行  -->
-        <!--
-		<Exec Condition="'$(SignTool_Algorithm_SHA1)'=='true'   And '@(SignTool_InputFiles_SHA1->Count())'!='0'"   Command="&quot;$(SignTool_ExePath)&quot; sign $(SignTool_Args)     /t  $(SignTool_TimeStampServer) /fd SHA1              &quot;%(SignTool_InputFiles_SHA1.FullPath)&quot;"/>
-		<Exec Condition="'$(SignTool_Algorithm_SHA256)'=='true' And '@(SignTool_InputFiles_SHA256->Count())'!='0'" Command="&quot;$(SignTool_ExePath)&quot; sign $(SignTool_Args)     /tr $(SignTool_TimeStampServer) /td SHA256 /fd SHA256 &quot;%(SignTool_InputFiles_SHA256.FullPath)&quot;"/>
-		<Exec Condition="'$(SignTool_IsDual)'=='true'           And '@(SignTool_InputFiles_Dual->Count())'!='0'"   Command="&quot;$(SignTool_ExePath)&quot; sign $(SignTool_Args) /as /tr $(SignTool_TimeStampServer) /td SHA256 /fd SHA256 &quot;%(SignTool_InputFiles_Dual.FullPath)&quot;"/>
-		-->
-
-        <Exec Condition="'$(SignTool_Algorithm_SHA1)'=='true'   And '@(SignTool_InputFiles_SHA1->Count())'!='0'"   Command="&quot;$(SignTool_ExePath)&quot; sign $(SignTool_Args)     /t  $(SignTool_TimeStampServer) /fd SHA1              $(SignTool_InputFiles_SHA1_Text)"/>
-        <Exec Condition="'$(SignTool_Algorithm_SHA256)'=='true' And '@(SignTool_InputFiles_SHA256->Count())'!='0'" Command="&quot;$(SignTool_ExePath)&quot; sign $(SignTool_Args)     /tr $(SignTool_TimeStampServer) /td SHA256 /fd SHA256 $(SignTool_InputFiles_SHA256_Text)"/>
-        <Exec Condition="'$(SignTool_IsDual)'=='true'           And '@(SignTool_InputFiles_Dual->Count())'!='0'"   Command="&quot;$(SignTool_ExePath)&quot; sign $(SignTool_Args) /as /tr $(SignTool_TimeStampServer) /td SHA256 /fd SHA256 $(SignTool_InputFiles_Dual_Text)"/>
-
-        <Message Condition="'$(SignTool_Verify)'=='true'" Text="＠＠＠＠＠ Verify Code Signing ＠＠＠＠＠" />
-        <Exec Condition="'$(SignTool_Verify)'=='true' And '$(SignTool_Algorithm_SHA1)'=='true'   And '@(SignTool_InputFiles_SHA1->Count())'!='0'"   Command="&quot;$(SignTool_ExePath)&quot; verify /v /pa /tw $(SignTool_InputFiles_SHA1_Text)" />
-        <Exec Condition="'$(SignTool_Verify)'=='true' And '$(SignTool_Algorithm_SHA256)'=='true' And '@(SignTool_InputFiles_SHA256->Count())'!='0'" Command="&quot;$(SignTool_ExePath)&quot; verify /v /pa /tw $(SignTool_InputFiles_SHA256_Text)" />
-        <Exec Condition="'$(SignTool_Verify)'=='true' And '$(SignTool_IsDual)'=='true'           And '@(SignTool_InputFiles_Dual->Count())'!='0'"   Command="&quot;$(SignTool_ExePath)&quot; verify /v /pa /tw $(SignTool_InputFiles_Dual_Text)" />
-
-    </Target>
-
-    <!-- SignTool_Workに渡すプロパティ文字列を作る -->
-    <Target Name="SignTool_Get_m_Properties" Outputs="$(Properties)">
-        <PropertyGroup>
-            <!--<SignTool_TargetObjPath >$(IntermediateOutputPath)$(TargetFileName)</SignTool_TargetObjPath >-->
-            <SignTool_ExePath Condition="'$(SignTool_ExePath)'==''">%(SignTool_ExePaths.FullPath)</SignTool_ExePath>
-
-            <!--<PP_SignTool_InputFiles_Temp>@(SignTool_InputFiles_Temp)</PP_SignTool_InputFiles_Temp>-->
-
-            <SignTool_TimeStampServer Condition="'$(SignTool_TimeStampServer)'=='' and '$(SignTool_Dlib_MetaJson_Path)'==''" >http://timestamp.digicert.com</SignTool_TimeStampServer>
-            <SignTool_TimeStampServer Condition="'$(SignTool_TimeStampServer)'=='' and '$(SignTool_Dlib_MetaJson_Path)'!=''" >http://timestamp.acs.microsoft.com/</SignTool_TimeStampServer>
-
-            <SignTool_Dlib_Dll_Path    Condition="'$(SignTool_Dlib_Dll_Path)'=='' And '$([System.Environment]::Is64BitProcess)'!='true'">$(TrustedSigningDlibBinFolder)\x86\Azure.CodeSigning.Dlib.dll</SignTool_Dlib_Dll_Path>
-            <SignTool_Dlib_Dll_Path    Condition="'$(SignTool_Dlib_Dll_Path)'=='' And '$([System.Environment]::Is64BitProcess)'=='true'">$(TrustedSigningDlibBinFolder)\x64\Azure.CodeSigning.Dlib.dll</SignTool_Dlib_Dll_Path>
-        </PropertyGroup>
-
-        <PropertyGroup>
-            <SignTool_Arg_PFX      Condition="'$(SignTool_PFX)'!=''"     > /f $(SignTool_PFX) </SignTool_Arg_PFX>
-            <SignTool_Arg_Password Condition="'$(SignTool_Password)'!=''"> /p $(SignTool_Password) </SignTool_Arg_Password>
-
-            <SignTool_Arg_Dlib Condition="'$(SignTool_Dlib_MetaJson_Path)'!=''"> /dlib &quot;$(SignTool_Dlib_Dll_Path)&quot; /dmdf &quot;$(SignTool_Dlib_MetaJson_Path)&quot;</SignTool_Arg_Dlib>
-
-            <SignTool_Arg_Description Condition="$(SignTool_Description)!=''" > /d &quot;$(SignTool_Description)&quot; </SignTool_Arg_Description>
-
-            <!-- PFXでもAzureでもない場合は証明書を自動選択に  -->
-            <SignTool_Arg_Auto Condition="'$(SignTool_Arg_PFX)'==''  And '$(SignTool_Arg_Password)'=='' And '$(SignTool_Arg_Dlib)'==''"> /a </SignTool_Arg_Auto>
-            <SignTool_Arg_Auto Condition="'$(SignTool_Arg_Auto)'!='' And '$(SignTool_AutoSelect_Issuer)'!=''" >$(SignTool_Arg_Auto) /i &quot;$(SignTool_AutoSelect_Issuer)&quot; </SignTool_Arg_Auto>
-            <SignTool_Arg_Auto Condition="'$(SignTool_Arg_Auto)'!='' And '$(SignTool_AutoSelect_Subject)'!=''">$(SignTool_Arg_Auto) /n &quot;$(SignTool_AutoSelect_Subject)&quot; </SignTool_Arg_Auto>
-            <SignTool_Args> /v $(SignTool_Arg_Auto) $(SignTool_Arg_PFX) $(SignTool_Arg_Password) $(SignTool_Arg_Description) $(SignTool_Arg_Dlib)</SignTool_Args>
-        </PropertyGroup>
-        
-        <PropertyGroup>
-            <Properties>
-                SignTool_Algorithm_SHA1=$(SignTool_Algorithm_SHA1);
-                SignTool_Algorithm_SHA256=$(SignTool_Algorithm_SHA256);
-                SignTool_TimeStampServer=$(SignTool_TimeStampServer);
-                SignTool_ExePath=$(SignTool_ExePath);
-                SignTool_Verify=$(SignTool_Verify);
-                SignTool_Args=$(SignTool_Args)
-            </Properties>            
-        </PropertyGroup>
-    </Target>
-    <!-- ********************************************************** -->
-
-    <Target Name="SignTool_GetDevBatchFilePath"
-            Condition="('$(SingTool_EnableSign_Build)'=='true' or '$(SingTool_EnableSign_Publish)'=='true') And $(OS.Contains('Windows')) And $(Configuration.Contains(&quot;Release&quot;))">
-
-        <!-- GitHub Actionsには環境変数DevEvnDirが設定されていないらしい-->
-        <!--<Message Text="DevEnvDir=$(DevEnvDir)" />        
+		<!-- GitHub Actionsには環境変数DevEvnDirが設定されていないらしい-->
+		<!--<Message Text="DevEnvDir=$(DevEnvDir)" />        
         <Message Text="MSBuildBinPath=$(MSBuildBinPath)" />
         <Message Text="MSBuildSDKsPath=$(MSBuildSDKsPath)"/>
         <Message Text="VsInstallRoot=$(VsInstallRoot)" />
         <Message Text="GITHUB_ACTIONS=$(GITHUB_ACTIONS)" />-->
 
-        <ItemGroup>
-            <!-- GitHub Actionsだとこっち無い？-->
-            <SignTool_DevBatchFilePaths Include="$(VsInstallRoot)\Common7\Tools\VsDevCmd.bat" Condition="Exists('$(VsInstallRoot)\Common7\Tools\VsDevCmd.bat')"/>
+		<!-- GitHub Actionsだとこっち無い？-->
+		<CreateProperty Value="$(VsInstallRoot)\Common7\Tools\VsDevCmd.bat" Condition="Exists('$(VsInstallRoot)\Common7\Tools\VsDevCmd.bat')">
+			<Output TaskParameter="Value" PropertyName="Gekka_SignTool_DevBatchFilePath" />
+		</CreateProperty>
+		<CreateProperty Value="$(VsInstallRoot)\VC\Auxiliary\Build\vcvars64.bat" Condition="Exists('$(VsInstallRoot)\VC\Auxiliary\Build\vcvars64.bat')">
+			<Output TaskParameter="Value" PropertyName="Gekka_SignTool_DevBatchFilePath" />
+		</CreateProperty>
+		<Error Condition="!Exists($(Gekka_SignTool_DevBatchFilePath))" Text="DevBatch is not found" />
 
-            <!-- GitHub Actionsだとこっちはある？-->
-            <SignTool_DevBatchFilePaths Include="$(VsInstallRoot)\VC\Auxiliary\Build\vcvars64.bat" Condition="Exists('$(VsInstallRoot)\VC\Auxiliary\Build\vcvars64.bat')"/>
-        </ItemGroup>
-        <Message Importance="high" Text="Batch=%(SignTool_DevBatchFilePaths.Fullpath)"/>
-    </Target>
+		<Message Importance="high" Text="DevBatch=$(Gekka_SignTool_DevBatchFilePath)" />
+	</Target>
 
-    <Target Name="SignTool_GetSignToolExePath" DependsOnTargets="SignTool_GetDevBatchFilePath" BeforeTargets="Build"
-            Condition="('$(SingTool_EnableSign_Build)'=='true' or '$(SingTool_EnableSign_Publish)'=='true') And $(OS.Contains('Windows')) And $(Configuration.Contains(&quot;Release&quot;))">
-        <PropertyGroup>
-            <batchpath>%(SignTool_DevBatchFilePaths.FullPath)</batchpath>
-        </PropertyGroup>
+	<!-- Signtool.exeのファイルパスを取得する  -->
+	<!-- 見つかったファイルのパスは Gekka_SignTool_ExePath プロパティにセット -->
+	<Target Name="Gekka_SignTool_GetSignToolExePath" DependsOnTargets="Gekka_SignTool_GetDevBatchFilePath" BeforeTargets="Build" Condition="'$(IsCrossTargetingBuild)'!='true' AND '$(Gekka_SignTool_ExePath)'=='' And $(OS.Contains('Windows')) And ('$(Gekka_SignTool_EnableSign_Build)'=='true' or '$(Gekka_SignTool_EnableSign_Publish)'=='true')">
 
-        <Exec Condition="!Exists($(SignTool_TargetFullPath))"
-			  Command="call &quot;$(batchpath)&quot; &amp; where signtool"
-			  IgnoreExitCode="true" ConsoleToMSBuild="true" EchoOff="true" >
-            <Output TaskParameter="ConsoleOutput"  PropertyName="WhereOutput" />
-        </Exec>
-        <PropertyGroup>
-            <p_SignTool_ExePath Condition="!Exists($(SignTool_TargetFullPath))">$([System.Text.RegularExpressions.RegEx]::Match($(WhereOutput),'[^;]*\\signtool.exe').Value)</p_SignTool_ExePath>
-        </PropertyGroup>
-        <Error Condition="!Exists($(p_SignTool_ExePath))" Text="SignTool.exe is not found" />
-        <ItemGroup>
-            <SignTool_ExePaths Include="$(p_SignTool_ExePath)"/>
-        </ItemGroup>
-        <Message Text="SignTool.exe Path=$(p_SignTool_ExePath)"/>
-    </Target>
+		<Exec Condition="!Exists($(Gekka_SignTool_TargetFullPath))" Command="call &quot;$(Gekka_SignTool_DevBatchFilePath)&quot; &amp;&amp; where signtool" IgnoreExitCode="true" ConsoleToMSBuild="true" EchoOff="true">
+			<Output TaskParameter="ConsoleOutput" PropertyName="WhereOutput" />
+		</Exec>
+		<PropertyGroup>
+			<p_Gekka_SignTool_ExePath Condition="!Exists($(Gekka_SignTool_TargetFullPath))">$([System.Text.RegularExpressions.RegEx]::Match($(WhereOutput),'[^;]*\\signtool.exe').Value)</p_Gekka_SignTool_ExePath>
+		</PropertyGroup>
+		<Error Condition="!Exists($(p_Gekka_SignTool_ExePath))" Text="SignTool.exe is not found" />
 
+		<Message Importance="low" Text="SignTool.exe Path=$(p_Gekka_SignTool_ExePath)" />
 
-    <!-- ビルド後の署名対象のファイルを取得 -->
-    <Target Name="SignTool_GetInputFiles_ForBuild" BeforeTargets="Build">
-        <Message  Text="＠＠＠＠＠ Start GetInputFiles For Build ＠＠＠＠＠" />
+		<CreateProperty Value="$(p_Gekka_SignTool_ExePath)">
+			<Output TaskParameter="Value" PropertyName="Gekka_SignTool_ExePath" />
+		</CreateProperty>
+	</Target>
 
-        <PropertyGroup>
-            <!--objフォルダに作られた出力ファイル.  (セットアッププロジェクトではこっちを使うので)-->
-            <SignTool_TargetObjPath >$(IntermediateOutputPath)$(TargetFileName)</SignTool_TargetObjPath >
+	<!-- ビルド後の署名対象のファイルを取得。 結果は @(Gekka_SignTool_InputFiles_Temp)に入る-->
+	<!-- 2回目にTargetDir,TargetPath,TargetFileNameがブランクで実行されるの場合がある(?)ので注意する -->
+	<Target Name="Gekka_SignTool_GetInputFiles_ForBuild" BeforeTargets="Build" Condition="'$(IsCrossTargetingBuild)'!='true'">
+		<Message Text="＠＠＠＠＠ Start GetInputFiles For Build ＠＠＠＠＠" />
 
-            <!-- .Net Coreでexeとdllが作られる場合を判定 -->
-            <SignTool_AppHostExe_Path>$(IntermediateOutputPath)\apphost.exe</SignTool_AppHostExe_Path>
-            <SignTool_AppHostExe_Exists Condition="Exists($(SignTool_AppHostExe_Path))">true</SignTool_AppHostExe_Exists>
-            <SignTool_AppHostExe_PathTarget Condition="$(SignTool_AppHostExe_Exists)=='true'">$(OutputPath)$(TargetName).exe</SignTool_AppHostExe_PathTarget>
+		<PropertyGroup>
+			<Gekka_SignTool_TargetObjPath></Gekka_SignTool_TargetObjPath>
+			<Gekka_SignTool_TargetObjPath_Exists></Gekka_SignTool_TargetObjPath_Exists>
+			<Gekka_SignTool_AppHostExe_Path></Gekka_SignTool_AppHostExe_Path>
+			<Gekka_SignTool_AppHostExe_Exists></Gekka_SignTool_AppHostExe_Exists>
+			<Gekka_SignTool_AppHostExe_PathTarget></Gekka_SignTool_AppHostExe_PathTarget>
 
-            <!-- SHA1とSHA256を同時に署名するか-->
-            <!--
-			<SignTool_IsDual Condition="$(SignTool_Algorithm_SHA1)=='true' And $(SignTool_Algorithm_SHA256)=='true' ">true</SignTool_IsDual>-->
-        </PropertyGroup>
-
-        <Message Importance="low" Text="SignTool_AppHostExe_Path=$(SignTool_AppHostExe_Path)" />
-        <Message Importance="low" Text="SignTool_AppHostExe_Exists=$(SignTool_AppHostExe_Exists)" />
-        <Message Importance="low" Text="SignTool_AppHostExe_PathTarget=$(SignTool_AppHostExe_PathTarget)" />
-
-        <ItemGroup>
-            <!-- 署名対象ファイル一覧をクリアしてから新しく格納-->
-            <SignTool_InputFiles_Temp Remove="%(SignTool_InputFiles_Temp.Identity)" />
-            <SignTool_InputFiles_Temp Include="%(SignTool_InputFiles.Identity)" />
-
-            <!--    C#,VB.Netはobjにあるファイルを対象に。VC++はobj無しで別の位置にある -->
-            <SignTool_InputFiles_Temp Include="$(TargetPath)"             Condition="!Exists($(SignTool_TargetObjPath)) And '$(TargetPath)'!=''" />
-            <SignTool_InputFiles_Temp Include="$(SignTool_TargetObjPath)" Condition=" Exists($(SignTool_TargetObjPath))" />
-
-            <SignTool_InputFiles_Temp Include="$(SignTool_AppHostExe_Path)" Condition="$(SignTool_AppHostExe_Exists)=='true'" />
-            <SignTool_InputFiles_Temp Include="$(SignTool_AppHostExe_PathTarget)" Condition=" Exists($(SignTool_AppHostExe_PathTarget)) And '$(SignTool_AppHostExe_PathTarget)'!=''" />
+			<!--objフォルダに作られた出力ファイル.  (セットアッププロジェクトではこっちを使うので)-->
+			<Gekka_SignTool_TargetObjPath Condition="'$(IntermediateOutputPath)'!=''">$(IntermediateOutputPath)$(TargetFileName)</Gekka_SignTool_TargetObjPath>
+			<Gekka_SignTool_TargetObjPath_Exists Condition="'$(IntermediateOutputPath)'!='' AND Exists($(Gekka_SignTool_TargetObjPath))">true</Gekka_SignTool_TargetObjPath_Exists>
 
 
-            <SignTool_InputFiles_TempOut Remove="%(SignTool_InputFiles_TempOut)" />
-            <SignTool_InputFiles_TempOut Inlude="dummyOutput" />
-        </ItemGroup>
+			<!-- .Net Coreでexeとdllが作られる場合を判定 -->
+			<Gekka_SignTool_AppHostExe_Path Condition="'$(IntermediateOutputPath)'!=''">$(IntermediateOutputPath)\apphost.exe</Gekka_SignTool_AppHostExe_Path>
+			<Gekka_SignTool_AppHostExe_Exists Condition="'$(IntermediateOutputPath)'!='' AND Exists($(Gekka_SignTool_AppHostExe_Path))">true</Gekka_SignTool_AppHostExe_Exists>
 
-        <Message Importance="low" Text="TargetPath=$(TargetPath)" />
-        <Message Importance="low" Text="SignTool_TargetObjPath=$(SignTool_TargetObjPath)" />
-        <Message Importance="low" Text="SignTool_TargetObjPath=$(SignTool_TargetObjPath)" />
-    </Target>
+			<Gekka_SignTool_AppHostExe_PathTarget Condition="'$(OutputPath)'!='' AND '$(TargetName)'!='' AND Exists($(Gekka_SignTool_AppHostExe_Path))">$(OutputPath)$(TargetName).exe</Gekka_SignTool_AppHostExe_PathTarget>
+		</PropertyGroup>
 
-    <!-- 発行後の署名対象のファイルを取得 -->
-    <Target Name="SignTool_GetInputFiles_ForPublish">
-        <ItemGroup>
-            <!-- 署名対象ファイル一覧をクリアしてから新しく格納-->
-            <SignTool_InputFiles_Temp Remove="%(SignTool_InputFiles_Temp.Identity)" />
-            <SignTool_InputFiles_Temp Include="$(PublishedSingleFilePath)" Condition="Exists($(PublishedSingleFilePath))"/>
-        </ItemGroup>
 
-        <Message Text="PublishedSingleFilePath=$(PublishedSingleFilePath)" Importance="high" />
-    </Target>
+		<ItemGroup>
+			<!-- 署名対象ファイル一覧をクリアしてから新しく格納-->
+			<Gekka_SignTool_InputFiles_Temp Remove="%(Gekka_SignTool_InputFiles_Temp.Identity)" />
+			<Gekka_SignTool_InputFiles_Temp Include="%(Gekka_SignTool_InputFiles.FullPath)" />
+
+			<!-- C#,VB.Netはobjにあるファイルを対象に。VC++はobj無しで別の位置にある -->
+			<Gekka_SignTool_InputFiles_Temp Include="$(TargetPath)" Condition="!Exists($(Gekka_SignTool_TargetObjPath)) And '$(TargetPath)'!=''" />
+			<Gekka_SignTool_InputFiles_Temp Include="$(Gekka_SignTool_TargetObjPath)" Condition=" Exists($(Gekka_SignTool_TargetObjPath)) And '$(TargetFileName)'!=''" />
+
+			<Gekka_SignTool_InputFiles_Temp Include="$(Gekka_SignTool_AppHostExe_Path)" Condition=" Exists($(Gekka_SignTool_AppHostExe_Path))       And '$(Gekka_SignTool_AppHostExe_Path)'!=''" />
+			<Gekka_SignTool_InputFiles_Temp Include="$(Gekka_SignTool_AppHostExe_PathTarget)" Condition=" Exists($(Gekka_SignTool_AppHostExe_PathTarget)) And '$(Gekka_SignTool_AppHostExe_PathTarget)'!=''" />
+		</ItemGroup>
+
+		<ItemGroup>
+			<m_Debug_message Include="TargetPath=$(TargetPath)" />
+			<m_Debug_message Include="TargetFileName=$(TargetFileName)" />
+			<m_Debug_message Include="Gekka_SignTool_TargetObjPath=$(Gekka_SignTool_TargetObjPath)" />
+			<m_Debug_message Include="Gekka_SignTool_TargetObjPath_Exists=$(Gekka_SignTool_TargetObjPath_Exists)" />
+
+			<m_Debug_message Include="Gekka_SignTool_AppHostExe_Path=$(Gekka_SignTool_AppHostExe_Path)" />
+			<m_Debug_message Include="Gekka_SignTool_AppHostExe_Exists=$(Gekka_SignTool_AppHostExe_Exists)" />
+			<m_Debug_message Include="Gekka_SignTool_AppHostExe_PathTarget=$(Gekka_SignTool_AppHostExe_PathTarget)" />
+
+			<m_Debug_message Include="Gekka_SignTool_InputFiles_Temp=%(Gekka_SignTool_InputFiles_Temp.Identity)" />
+			<m_Debug_message Include="Gekka_SignTool_TargetObjPath=$(Gekka_SignTool_TargetObjPath)" />
+			<m_Debug_message Include="Gekka_SignTool_InputFiles_Temp=%(Gekka_SignTool_InputFiles_Temp.Identity)" />
+		</ItemGroup>
+		<Message Condition="'$(Gekka_SignTool_IsScriptDebug)'=='true'" Importance="high" Text=" *** %(m_Debug_message.Identity)" />
+		<Message Condition="'$(Gekka_SignTool_IsScriptDebug)'=='true'" Importance="high" Text=" --- %(Gekka_SignTool_InputFiles_Temp.Identity)" />
+		<ItemGroup>
+			<m_Debug_message Remove="%(m_Debug_message.Identity)" />
+		</ItemGroup>
+	</Target>
+
+	<!-- 発行後の署名対象のファイルを取得 -->
+	<Target Name="Gekka_SignTool_GetInputFiles_ForPublish" AfterTargets="Publish" Condition="'$(IsCrossTargetingBuild)'!='true'">
+		<ItemGroup>
+			<!-- 署名対象ファイル一覧をクリアしてから新しく格納-->
+			<Gekka_SignTool_InputFiles_Temp Remove="%(Gekka_SignTool_InputFiles_Temp.Identity)" />
+			<Gekka_SignTool_InputFiles_Temp Include="$(PublishedSingleFilePath)" Condition="Exists($(PublishedSingleFilePath))" />
+		</ItemGroup>
+
+		<Message Text="PublishedSingleFilePath=$(PublishedSingleFilePath)" Importance="high" />
+	</Target>
+
+	<!-- *************************************   -->
+
+	<Choose>
+		<When Condition=" '$(MSBuildVersion.Substring(0,2))' &gt;= 16 Or ('$(MSBuildVersion.Substring(0,2))' == 15 And '$(MSBuildVersion.Substring(3,1))' &gt;= 8)">
+			<PropertyGroup>
+				<Gekka_TaskFactory_TypeName>RoslynCodeTaskFactory</Gekka_TaskFactory_TypeName>
+				<Gekka_TaskFactory_AssemblyFile>$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll</Gekka_TaskFactory_AssemblyFile>
+			</PropertyGroup>
+		</When>
+
+		<Otherwise>
+			<PropertyGroup>
+				<Gekka_TaskFactory>CodeTaskFactory</Gekka_TaskFactory>
+				<Gekka_TaskFactory_AssemblyFile>$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll</Gekka_TaskFactory_AssemblyFile>
+			</PropertyGroup>
+		</Otherwise>
+	</Choose>
+
+
+	<UsingTask TaskName="Gekka.MSBuild.SignTool" TaskFactory="$(Gekka_TaskFactory_TypeName)" AssemblyFile="$(Gekka_TaskFactory_AssemblyFile)">
+		<ParameterGroup>
+			<SigntoolExePath ParameterType="System.String" Required="true" />
+			<InputFiles ParameterType="System.String[]" Required="true" />
+
+			<Algorithms ParameterType="System.String[]" />
+
+			<TimeStampServer ParameterType="System.String" />
+
+			<PFXPath ParameterType="System.String" />
+			<Password ParameterType="System.String" />
+
+			<TrustedSigningDlibBinFolder ParameterType="System.String" />
+			<DlibPathMetaJson ParameterType="System.String" />
+
+			<Description ParameterType="System.String" />
+
+			<Issuer ParameterType="System.String" />
+			<Subject ParameterType="System.String" />
+
+			<Args ParameterType="System.String" />
+
+			<IsScriptDebug ParameterType="System.Boolean" />
+			<UseMutex ParameterType="System.Boolean" />
+		</ParameterGroup>
+		<Task>
+			<Reference Include="Microsoft.Build.Tasks.Core" />
+			<Using Namespace="System" />
+			<Using Namespace="System.IO" />
+			<Using Namespace="System.Linq" />
+			<Using Namespace="System.Collections.Generic" />
+			<Using Namespace="Microsoft.Build.Framework" />
+
+			<Code Type="Class" Language="cs">
+				<![CDATA[
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Microsoft.Build.Framework;
+
+namespace Gekka.MSBuild
+{
+    using System.Xml;
+
+    public class SignTool : Microsoft.Build.Utilities.Task, Microsoft.Build.Framework.ICancelableTask
+    {
+        #region
+
+        /// <summary>Path to signtool.exe</summary>
+        [Microsoft.Build.Framework.Required]
+        public string SigntoolExePath { get; set; }
+
+
+        /// <summary>Code signing applies to these files.</summary>
+        [Microsoft.Build.Framework.Required]
+        public string[] InputFiles { get; set; }
+
+        /// <summary>/fd  SHA1,SHA256;SHA384;SHA512</summary>
+        public string[] Algorithms { get; set; }
+
+        /// <summary>/t or /td  Specifies the URL of the time stamp server</summary>
+        public string TimeStampServer { get; set; }
+
+        /// <summary>/f  Specifies the signing certificate in a file.</summary>
+        public string PFXPath { get; set; }
+
+        /// <summary>/p  Specifies the password to use when opening a PFX file. (Use the /f option to specify a PFX file.)</summary>
+        public string Password { get; set; }
+
+        /// <summary></summary>
+        public string TrustedSigningDlibBinFolder { get; set; }
+
+        /// <summary></summary>
+        public string DlibPathMetaJson { get; set; }
+
+        /// <summary>/d  Specifies a description of the signed content.</summary>
+        public string Description { get; set; }
+
+        /// <summary>/i  Specifies the name of the issuer of the signing certificate. This value can be a substring of the entire issuer name.</summary>
+        public string Issuer { get; set; }
+
+        /// <summary>/n  Specifies the name of the subject of the signing certificate. This value can be a substring of the entire subject name.</summary>
+        public string Subject { get; set; }
+
+        /// <summary></summary>
+        public string Args { get; set; }
+
+
+        /// <summary></summary>
+        public bool UseMutex { get; set; }
+
+
+        /// <summary></summary>
+        public bool IsScriptDebug { get; set; }
+        #endregion
+
+        private bool IsCancelRequested;
+
+        /// <inheritdoc/>
+        public override bool Execute()
+        {
+            if (IsScriptDebug)
+            {
+                if (System.Diagnostics.Debugger.IsAttached)
+                {
+                    System.Diagnostics.Debugger.Break();
+                }
+                else
+                {
+                    System.Diagnostics.Debugger.Launch();
+                }
+
+            }
+
+            if (!System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
+            {
+                this.Log.LogWarning("This task is not support in current OS");
+                return true;
+            }
+
+            var verboseLebel = GetLogVerbosity() ?? LoggerVerbosity.Normal;
+
+            const string ENV_PASSWORD = "QXPASSWORD";
+            const string MUTEX_NAME = "Mutex_Gekka_SignTool_B0D7FEBD_CA04_487A_B1F2_FA5C48F89D14";
+
+            if (InputFiles == null || InputFiles.Length == 0)
+            {
+                return true;
+                //throw new ApplicationException("InputFile Required");
+            }
+
+            if (Algorithms == null || Algorithms.Length == 0)
+            {
+                Algorithms = new string[] { "SHA256" };
+            }
+            Algorithms = Algorithms.Distinct().ToArray();
+
+            InputFiles = InputFiles.Select(_ => _.Trim().Trim('\"')).ToArray();
+
+            CheckFilePath(nameof(SigntoolExePath), SigntoolExePath);
+            CheckFilePath(nameof(InputFiles), InputFiles);
+            CheckFilePath(nameof(PFXPath), PFXPath);
+
+            string dlibdllpath = null;
+            if (!string.IsNullOrWhiteSpace(this.TrustedSigningDlibBinFolder))
+            {
+                dlibdllpath = System.IO.Path.Combine(this.TrustedSigningDlibBinFolder, "x86", "Azure.CodeSigning.Dlib.dll");
+                CheckFilePath(nameof(TrustedSigningDlibBinFolder), dlibdllpath);
+                CheckFilePath(nameof(DlibPathMetaJson), DlibPathMetaJson);
+            }
+
+            string exePath = $"\"{this.SigntoolExePath}\"";
+            string args = GetCommonArgs();
+            string[] environmentVariables = string.IsNullOrWhiteSpace(this.Password) ? new string[0] : new string[] { $"{ENV_PASSWORD}={this.Password}" };
+            bool isFirstExec = true;
+
+
+            System.Threading.Tasks.Task.Run(async () =>
+            {
+                using (System.Threading.Mutex mutex2 = new System.Threading.Mutex(false, MUTEX_NAME))
+                {
+                    mutex2.WaitOne(0, false);
+                    await System.Threading.Tasks.Task.Delay(100000);
+                    mutex2.ReleaseMutex();
+                }
+            });
+
+            foreach (var files in InputFiles.Select(f => new { File = f, Ext = System.IO.Path.GetExtension(f).ToLower() }).GroupBy(_ => _.Ext, _ => _.File))
+            {//拡張子ごとにグループ化して処理
+
+                string[] algorithms = GetAlgorithms(files.Key, Algorithms);
+                for (int i = 0; i < algorithms.Length && !IsCancelRequested; i++)
+                {
+                    var exec = new Microsoft.Build.Tasks.Exec();
+                    exec.BuildEngine = this.BuildEngine;
+                    exec.Command = CreateCommandString(algorithms[i], files, i == 0, verboseLebel);
+                    exec.EnvironmentVariables = environmentVariables;
+
+                    if (isFirstExec)
+                    {
+                        //Signtool.exeの最初の1回目の実行のみmutexで排他実行する
+                        using (System.Threading.Mutex mutex = new System.Threading.Mutex(false, MUTEX_NAME))
+                        {
+                            bool hasMutex = TryGetMutex(mutex);
+
+                            try
+                            {
+                                if (IsCancelRequested)
+                                {
+                                    return false;
+                                }
+
+                                if (!exec.Execute())
+                                {
+                                    return false;
+                                }
+                            }
+                            finally
+                            {
+                                if (hasMutex)
+                                {
+                                    mutex.ReleaseMutex();
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (!exec.Execute())
+                        {
+                            return false;
+                        }
+                    }
+
+                    isFirstExec = false;
+                }
+            }
+
+            return true; //UsingTaskのコードをFragmentの場合は、returnあるとCS0162が発生するよ
+
+            /// <summary>Exec.Command設定する文字列を作る</summary>
+            string CreateCommandString(string algo, System.Collections.Generic.IEnumerable<string> inputFiles, bool isFistAlgorithm, LoggerVerbosity verbosity)
+            {
+                string isDual = isFistAlgorithm ? "" : "/as";
+                string timeStampServer = GetTimeStampServerArg(algo);
+                string files = string.Join(" ", inputFiles.Select(_ => $"\"{_}\""));
+                string verbose = "";
+                switch (verbosity)
+                {
+                case LoggerVerbosity.Quiet:
+                case LoggerVerbosity.Minimal:
+                    verbose = "/q";
+                    break;
+                case LoggerVerbosity.Detailed:
+                case LoggerVerbosity.Diagnostic:
+                    verbose = "/debug";
+                    break;
+                case LoggerVerbosity.Normal:
+                default:
+                    verbose = "";
+                    break;
+                }
+                return $"{exePath} sign {verbose} {args} {isDual} /fd {algo} {timeStampServer} {files}";
+            }
+
+            /// <summary>Signtoolに渡すスイッチのパラメータが有効なら、スイッチとパラメーター追加する</summary>
+            bool SetArgNotEmpty(List<string> list, string @switch, string param)
+            {
+                if (param == null)
+                {
+                    return false;
+                }
+
+                param = param.Trim();
+                if (param.Contains(" "))
+                {
+                    param = $"\"{param}\"";
+                }
+                list.Add($"{@switch} {param}");
+                return true;
+            }
+
+            /// <summary>Signtoolに渡す共通の引数を組み立てる</summary>
+            string GetCommonArgs()
+            {
+                List<string> list = new List<string>();
+
+                if (SetArgNotEmpty(list, "/dlib", dlibdllpath))
+                {
+                    //Azure Trusted Signingの場合
+                    SetArgNotEmpty(list, "/dmdf", this.DlibPathMetaJson);
+                }
+                else if (SetArgNotEmpty(list, "/f", this.PFXPath))
+                {
+                    //PFXで署名する場合                                      
+                    if (!string.IsNullOrWhiteSpace(this.Password))
+                    {
+                        SetArgNotEmpty(list, "/p", "%" + ENV_PASSWORD + "%");
+                    }
+                }
+                else if (SetArgNotEmpty(list, "/i", this.Issuer) | SetArgNotEmpty(list, "/n", this.Subject))
+                {
+                    //ストアにある証明書のIssureかSubjectで自動選択する場合
+                }
+                else
+                {
+                    //PFX署名指定ではなく、証明書の選択条件でもない場合は証明書を自動選択に
+                    list.Add("/a");
+                }
+
+                SetArgNotEmpty(list, "/d", this.Description);
+                //SetArgNotEmpty(list, "/i", this.Issuer);
+                //SetArgNotEmpty(list, "/n", this.Subject);
+                return string.Join(" ", list);
+            }
+
+            /// <summary>タイムスタンプ用のスイッチを組み立てる</summary>
+            string GetTimeStampServerArg(string algo)
+            {
+                if (string.IsNullOrEmpty(this.TimeStampServer))
+                {
+                    return "";
+                }
+                else if (algo == "SHA1")
+                {
+                    return $"/t  {this.TimeStampServer}";
+                }
+                else
+                {
+                    return $"/tr {this.TimeStampServer} /td {algo}";
+                }
+            }
+
+            /// <summary>拡張子で有効な署名アルゴリズムを抽出する</summary>
+            static string[] GetAlgorithms(string ext, string[] algorithms)
+            {
+                string[] SupportedExtensions_OnlySHA256 = ".msix;.msixbundle;.appx;.appxbundle".Split(';'); //SHA256のみ署名できる
+
+                string[] SupportedExtensions_Single = ".msi;.ps1;.vbs;.vbe;.js;".Split(';'); //一つしか署名できない
+                string[] SupportedExtensions_Dual = ".exe;.dll;.ocx;.scr;.sys;.cab;.cat;.efi;".Split(';'); //多重署名できる
+
+                //SHA1が最初になるように
+                algorithms = algorithms.Where(_ => _ == "SHA1").Concat(algorithms.Where(_ => _ != "SHA1")).ToArray();
+
+                List<string> list = new List<string>();
+
+                //bool hasSHA1 = Algorithms.Contains("SHA1");
+                if (SupportedExtensions_OnlySHA256.Contains(ext))
+                {
+                    return algorithms.Where(_ => _ == "SHA256").ToArray();
+                }
+                else if (SupportedExtensions_Single.Contains(ext))
+                {
+                    //一つしか署名できないなら最後のを採用する
+                    return algorithms.Reverse().Take(1).ToArray();
+                }
+                else if (SupportedExtensions_Dual.Contains(ext))
+                {
+                    //多重署名できるならすべて採用
+                    return algorithms;
+                }
+                else
+                {
+                    return new string[0];
+                }
+            }
+
+            /// <summary>指定したファイルパスが存在するファイルパスかを調べる</summary>
+            static bool CheckFilePath(string name, params string[] paths)
+            {
+                foreach (var path in paths)
+                {
+                    if (string.IsNullOrWhiteSpace(path))
+                    {
+                        return false;
+                    }
+                    else if (!System.IO.File.Exists(path))
+                    {
+                        //this.Log.LogWarning($"{name} File Missing. {path}");
+                        //return false;
+                        throw new System.IO.FileNotFoundException($"{name} File Missing. {path}");
+                    }
+                    else
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            /// <summary>指定したファイルパスが存在するファイルパスかを調べる</summary>
+            bool TryGetMutex(System.Threading.Mutex mutex, int waitSeconds = 60)
+            {
+                if (waitSeconds < 0 || !this.UseMutex)
+                {
+                    return false;
+                }
+
+                try
+                {
+                    bool hasMutex = mutex.WaitOne(0, false);
+                    if (!hasMutex)
+                    {
+                        TimeSpan timeout = TimeSpan.FromSeconds(waitSeconds);
+                        System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
+                        watch.Start();
+
+                        this.Log.LogMessage($"Detected that a code signing operation is currently being executed. {waitSeconds:0}sec");// "署名の同時実行が検出されたため、待機をします");
+
+                        using (System.Threading.ManualResetEvent evCancel = new System.Threading.ManualResetEvent(false))
+                        {
+                            this.evCancel = evCancel;
+                            try
+                            {
+                                int index = System.Threading.WaitHandle.WaitAny(new System.Threading.WaitHandle[] { evCancel, mutex }, waitSeconds * 1000, false);
+                                if (index == 0)
+                                {
+                                    return false;
+                                }
+                            }
+                            finally
+                            {
+                                this.evCancel = null;
+                            }
+                        }
+
+                        hasMutex = mutex.WaitOne(0, false);
+                        if (!hasMutex)
+                        {
+                            this.Log.LogWarning("Could not confirm that concurrent signature execution has been released.");// "署名の同時実行で解放が検出できませんでした");
+                        }
+                    }
+                    return hasMutex;
+                }
+                catch (System.Threading.AbandonedMutexException)
+                {
+                    return true;
+                }
+            }
+
+            LoggerVerbosity? GetLogVerbosity()
+            {
+                IBuildEngine buildEngine = base.BuildEngine;
+                if (buildEngine.GetType().Name != "TaskHost")
+                {
+                    base.Log.LogMessage(MessageImportance.Low, "This inline task is not 'TaskHost'");
+                    return null;
+                }
+                object obj = buildEngine;
+                string[] array = "LoggingContext.LoggingService.Loggers".Split('.');
+                foreach (string text in array)
+                {
+                    obj = obj.GetType().GetProperty(text, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic)?.GetValue(obj);
+                    if (obj == null)
+                    {
+                        return null;
+                    }
+                }
+                if (!(obj is IEnumerable<ILogger> source))
+                {
+                    return null;
+                }
+                var result = source.Select((ILogger _) => _.Verbosity).Prepend(LoggerVerbosity.Quiet).Max();
+                return result;
+            }
+        }
+
+        private System.Threading.ManualResetEvent evCancel = null;
+
+        /// <inheritdoc/>
+        public void Cancel()
+        {
+            IsCancelRequested = true;
+            try
+            {
+                this.evCancel?.Set();
+            }
+            catch (ObjectDisposedException)
+            {
+            }
+        }
+
+
+        #region
+        private LoggerVerbosity? GetLogVerbosity()
+        {
+            IBuildEngine buildEngine = base.BuildEngine;
+            if (buildEngine.GetType().Name != "TaskHost")
+            {
+                base.Log.LogError("This inline task is not 'TaskHost'");
+                return null;
+            }
+            object obj = buildEngine;
+            string[] array = "LoggingContext.LoggingService.Loggers".Split('.');
+            foreach (string text in array)
+            {
+                obj = obj.GetType().GetProperty(text, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic)?.GetValue(obj);
+                if (obj == null)
+                {
+                    return null;
+                }
+            }
+            if (!(obj is IEnumerable<ILogger> source))
+            {
+                return null;
+            }
+            var result = new LoggerVerbosity[1].Union(source.Select((ILogger _) => _.Verbosity)).Max();
+            return result;
+        }
+        #endregion
+
+    }
+
+}
+]]>
+			</Code>
+		</Task>
+	</UsingTask>
+
+	<!-- *************************************   -->
+
+
+	<UsingTask TaskName="Gekka_MSBuild_DEBUG" TaskFactory="$(Gekka_TaskFactory_TypeName)" AssemblyFile="$(Gekka_TaskFactory_AssemblyFile)">
+		<ParameterGroup>
+			<S0 ParameterType="System.String" />
+			<S1 ParameterType="System.String" />
+			<S2 ParameterType="System.String" />
+			<S3 ParameterType="System.String" />
+			<S4 ParameterType="System.String" />
+			<S5 ParameterType="System.String" />
+			<S6 ParameterType="System.String" />
+			<S7 ParameterType="System.String" />
+			<S8 ParameterType="System.String" />
+			<S9 ParameterType="System.String" />
+
+			<SS0 ParameterType="System.String[]" />
+			<SS1 ParameterType="System.String[]" />
+		</ParameterGroup>
+		<Task>
+			<Reference Include="Microsoft.Build.Tasks.Core" />
+			<Using Namespace="System" />
+			<Code Type="Fragment" Language="cs">
+				if (System.Diagnostics.Debugger.IsAttached)
+				{
+				System.Diagnostics.Debugger.Break();
+				}
+				else
+				{
+				System.Diagnostics.Debugger.Launch();
+				}
+			</Code>
+		</Task>
+	</UsingTask>
 </Project>

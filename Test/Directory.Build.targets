@@ -4,6 +4,15 @@
 	<Import Project="..\MSBuildSignTool\build\MSBuildSignTool.targets" />
 
 	<PropertyGroup>
-		<SignTool_Verify>false</SignTool_Verify>
+
+		<Gekka_SignTool_EnableSign_Build Condition="'$(Gekka_SignTool_EnableSign_Build)'==''">true</Gekka_SignTool_EnableSign_Build>
+		<Gekka_SignTool_Algorithms Condition="'$(Gekka_SignTool_Algorithms)'==''">SHA1;SHA256;SHA384;SHA512</Gekka_SignTool_Algorithms>
+		<Gekka_SignTool_TimeStampServer Condition="'$(Gekka_SignTool_TimeStampServer)'==''">http://timestamp.digicert.com</Gekka_SignTool_TimeStampServer>
+
+		<Gekka_SignTool_AutoSelect_Subject Condition="'$(Gekka_SignTool_AutoSelect_Subject)'==''">SCIENTIFIC</Gekka_SignTool_AutoSelect_Subject>
+
+		<Gekka_SignTool_Verify Condition="'$(Gekka_SignTool_Verify)'==''">false</Gekka_SignTool_Verify>
+
+		<Gekka_SignTool_IsScriptDebug Condition="'$(Gekka_SignTool_IsScriptDebug)'==''">false</Gekka_SignTool_IsScriptDebug>
 	</PropertyGroup>
 </Project>

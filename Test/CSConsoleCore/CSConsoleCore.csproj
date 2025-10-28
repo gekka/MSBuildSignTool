@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
 		<!--<TargetFrameworks>net48;net6.0;net8.0;</TargetFrameworks>-->
-		<TargetFrameworks>net6.0;</TargetFrameworks>
+		<TargetFrameworks>net48;net6.0;net8.0;</TargetFrameworks>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<LangVersion>10.0</LangVersion>
@@ -11,20 +11,37 @@
 
 	<PropertyGroup>
 
-		<SingTool_EnableSign_Build   >true</SingTool_EnableSign_Build>
-		<SingTool_EnableSign_Publish >true</SingTool_EnableSign_Publish>
-		<SingTool_EnableSign_Nupkg   >true</SingTool_EnableSign_Nupkg>
-		
-		<SignTool_PFX      >Test.pfx</SignTool_PFX>
-		<SignTool_Password >123456</SignTool_Password>
-		
+		<Gekka_SignTool_EnableSign_Build>true</Gekka_SignTool_EnableSign_Build>
+		<Gekka_SignTool_EnableSign_Publish>false</Gekka_SignTool_EnableSign_Publish>
+		<Gekka_SignTool_EnableSign_Nupkg>false</Gekka_SignTool_EnableSign_Nupkg>
+
+		<Gekka_SignTool_PFX>Test.pfx</Gekka_SignTool_PFX>
+		<Gekka_SignTool_Password>123456</Gekka_SignTool_Password>
+
 		<!-- pfxで発行の署名するとファイルが解放されていなくて失敗する？ 少し遅延させると成功する -->
-		<SignTool_DelaySign>2</SignTool_DelaySign>
+		<Gekka_SignTool_DelaySign>2</Gekka_SignTool_DelaySign>
 
 		<!-- pfxで署名する場合、PCに証明書をインストールしていないと検証が失敗する -->
-		<SignTool_Verify >false</SignTool_Verify>
+		<Gekka_SignTool_Verify>false</Gekka_SignTool_Verify>
 
 		<!--<SignTool_Nupkg_Pfx_Path>$(SignTool_PFX)</SignTool_Nupkg_Pfx_Path>
 		<SignTool_Nupkg_Password>$(SignTool_Password)</SignTool_Nupkg_Password>-->
+
+
+
 	</PropertyGroup>
+
+	<ItemGroup>
+	  <None Remove="App1 %28Package%29_1.0.0.0_x86.msixbundle" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Content Include="App1 (Package)_1.0.0.0_x86.msixbundle">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Gekka_SignTool_InputFiles Include="$(OutputPath)App1 (Package)_1.0.0.0_x86.msixbundle" />
+	</ItemGroup>
 </Project>

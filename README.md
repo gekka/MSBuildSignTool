@@ -27,45 +27,43 @@ You can change the settings by adding them in the project file.
 ```xml
 <Project >
     <PropertyGroup>
-        <SingTool_EnableSign_Build   >true</SingTool_EnableSign_Build>
-        <SingTool_EnableSign_Publish >true</SingTool_EnableSign_Publish>
-        <SingTool_EnableSign_Nupkg   >true</SingTool_EnableSign_Nupkg>
+		<Gekka_SignTool_EnableSign_Build   ></Gekka_SignTool_EnableSign_Build>
+		<Gekka_SignTool_EnableSign_Publish >false</Gekka_SignTool_EnableSign_Publish>
+		<Gekka_SignTool_EnableSign_Nupkg   >false</Gekka_SignTool_EnableSign_Nupkg>
 
-        <SignTool_ExePath></SignTool_ExePath>
+		<Gekka_SignTool_ExePath         ></Gekka_SignTool_ExePath>
+		<Gekka_SignTool_TimeStampServer ></Gekka_SignTool_TimeStampServer>
+		<Gekka_SignTool_Algorithms      >SHA1;SHA256;SHA384;SHA512</Gekka_SignTool_Algorithms>
 
-        <SignTool_TimeStampServer></SignTool_TimeStampServer>
-        <SignTool_Algorithm_SHA1>false</SignTool_Algorithm_SHA1>
-        <SignTool_Algorithm_SHA256>true</SignTool_Algorithm_SHA256>
-        
-        <SignTool_AutoSelect_Subject ></SignTool_AutoSelect_Subject>
-        <SignTool_AutoSelect_Issuer  ></SignTool_AutoSelect_Issuer>
+		<Gekka_SignTool_AutoSelect_Issuer  ></Gekka_SignTool_AutoSelect_Issuer>
+		<Gekka_SignTool_AutoSelect_Subject ></Gekka_SignTool_AutoSelect_Subject>
 
         <!-- For use PFX and password -->
-        <SignTool_PFX      ></SignTool_PFX>
-        <SignTool_Password ></SignTool_Password>
+		<Gekka_SignTool_PFX      ></Gekka_SignTool_PFX>
+		<Gekka_SignTool_Password ></Gekka_SignTool_Password>
 
         <!-- For use Azure Trust Signing -->
-        <SignTool_Dlib_Dll_Path ></SignTool_Dlib_Dll_Path>
-        <SignTool_Dlib_MetaJson_Path Condition></SignTool_Dlib_MetaJson_Path Condition>
+		<Gekka_SignTool_Dlib_Dll_Path      ></Gekka_SignTool_Dlib_Dll_Path>
+		<Gekka_SignTool_Dlib_MetaJson_Path ></Gekka_SignTool_Dlib_MetaJson_Path>
 
         <!-- https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-nuget-sign?WT.mc_id=DT-MVP-5000708 -->
-        <SignTool_Nupkg_FingerPrint></SignTool_Nupkg_FingerPrint>
-        <SignTool_Nupkg_SubjectName></SignTool_Nupkg_SubjectName>
-        <SignTool_Nupkg_StoreName></SignTool_Nupkg_StoreName>
-        <SignTool_Nupkg_StoreLocation></SignTool_Nupkg_StoreLocation>
-        <SignTool_Nupkg_Pfx_Path></SignTool_Nupkg_Pfx_Path>
-        <SignTool_Nupkg_Password></SignTool_Nupkg_Password>
+        <Gekka_SignTool_Nupkg_FingerPrint></Gekka_SignTool_Nupkg_FingerPrint>
+        <Gekka_SignTool_Nupkg_SubjectName></Gekka_SignTool_Nupkg_SubjectName>
+        <Gekka_SignTool_Nupkg_StoreName></Gekka_SignTool_Nupkg_StoreName>
+        <Gekka_SignTool_Nupkg_StoreLocation></Gekka_SignTool_Nupkg_StoreLocation>
+        <Gekka_SignTool_Nupkg_Pfx_Path></Gekka_SignTool_Nupkg_Pfx_Path>
+        <Gekka_SignTool_Nupkg_Password></Gekka_SignTool_Nupkg_Password>
     </PropertyGroup>
 
     <ItemDefinitionGroup>
-        <SignTool_InputFiles Include="filepath1" />
-        <SignTool_InputFiles Include="filepath2" />
+        <Gekka_SignTool_InputFiles Include="filepath1" />
+        <Gekka_SignTool_InputFiles Include="filepath2" />
     </ItemDefinitionGroup>
 
     <Target Name="Your Target Name" BeforeTargets="Build" >
         <ItemDefinitionGroup>
-            <SignTool_InputFiles Include="filepath3" />
-            <SignTool_InputFiles Include="filepath4" />
+            <Gekka_SignTool_InputFiles Include="filepath3" />
+            <Gekka_SignTool_InputFiles Include="filepath4" />
         </ItemDefinitionGroup>
     </Target>
 ```
@@ -78,13 +76,10 @@ You can change the settings by adding them in the project file.
     Url for timestamps server
     If not set, targets uses digicert's server.
     
-- SignTool_Algorithm_SHA1  
-    If set to true, sign with SHA1
- 
-- SignTool_Algorithm_SHA256  
-    If set to true, sign with SHA256
-    
-    This target sign multiple signatures to one file if SHA1 and SHA256 are enabled.
+- Gekka_SignTool_Algorithms   
+    List the algorithms to be used for signing (e.g., SHA1; SHA256; SHA384; SHA512).
+
+    If multiple values are specified, the file will be signed with multiple signatures.
 
 - SignTool_InputFiles  
     If there are additional files to be signed, specify the path in Incldue.

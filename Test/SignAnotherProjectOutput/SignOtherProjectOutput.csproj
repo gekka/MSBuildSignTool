@@ -1,25 +1,24 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <OutputType>Library</OutputType>
-        <TargetFrameworks>net48</TargetFrameworks>
-        <ImplicitUsings>disable</ImplicitUsings>
-        <Nullable>disable</Nullable>
-        <RunPostBuildEvent>Always</RunPostBuildEvent>
-    </PropertyGroup>
+	<PropertyGroup>
+		<OutputType>Library</OutputType>
+		<TargetFrameworks>net48</TargetFrameworks>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<Nullable>disable</Nullable>
+		<RunPostBuildEvent>Always</RunPostBuildEvent>
+	</PropertyGroup>
 
-    <PropertyGroup>
-        <DisableFastUpToDateCheck Condition="$(Configuration.Contains(&quot;Release&quot;))">true</DisableFastUpToDateCheck>
-    </PropertyGroup>
+	<PropertyGroup>
+		<DisableFastUpToDateCheck Condition="$(Configuration.Contains(&quot;Release&quot;))">true</DisableFastUpToDateCheck>
+	</PropertyGroup>
 
-    <PropertyGroup>
-        <!-- インストール時のUACに表示される名前 -->
-        <SignTool_Description>Setup TestDescription</SignTool_Description>
-    </PropertyGroup>
-    <Target Name="SignSetup1" BeforeTargets="Build">
-        <ItemGroup>
-            <SignTool_InputFiles Include="..\Setup1\Release\*" />
-            <SignTool_InputFiles Include="D:\PROG\_Program\Microsoft\vs_productkey\new\keys\vs_productkey.ps1" />
-        </ItemGroup>
-    </Target>
+	<PropertyGroup>
+		<!-- インストール時のUACに表示される名前 -->
+		<Gekka_SignTool_Description>Setup TestDescription</Gekka_SignTool_Description>
+	</PropertyGroup>
+	<Target Name="SignSetup1" BeforeTargets="Build">
+		<ItemGroup>
+			<Gekka_SignTool_InputFiles Include="..\Setup1\Release\*" />
+		</ItemGroup>
+	</Target>
 </Project>

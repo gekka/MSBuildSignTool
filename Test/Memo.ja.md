@@ -10,9 +10,9 @@
 
 ## プロジェクト
 - AzureTrustSigning  
-	Azure Trust Sigining(信頼された署名)で署名する
+	Azure Trust Signing(信頼された署名)で署名する
 
-	Azure Trust Siginingで設定をして、az_sign.metadata.jsonファイルに設定値を記入する必要があります
+	Azure Trust Signingで設定をして、az_sign.metadata.jsonファイルに設定値を記入する必要があります
 
 - CppProject  
 	C++のプロジェクトの出力ファイルへの署名をテストする  
@@ -29,7 +29,7 @@
 
 	証明書は証明書ストアから自動選択
 
-- SignOterProjectOutput  
+- SignOtherProjectOutput  
 	プロジェクト外にあるファイルへの署名をテストする
  
  	証明書は証明書ストアから自動選択

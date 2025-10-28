@@ -7,7 +7,14 @@
     </ItemGroup>
 
     <PropertyGroup>
-        <SignTool_Algorithm_SHA1>true</SignTool_Algorithm_SHA1>
-        <SignTool_Algorithm_SHA256>true</SignTool_Algorithm_SHA256>
+		<Gekka_SignTool_Algorithms >SHA1;SHA256;</Gekka_SignTool_Algorithms>
     </PropertyGroup>
+	<Target Name="AA1" BeforeTargets="Build">
+		<Message Text="あああああああああああああああああああああああああああああああああああああああああああああ"/>
+		<Message Text="$(Gekka_SignTool_Algorithms)"/>
+	</Target>
+	<Target Name="AA2" AfterTargets="Build">
+		<Message Text="いいいいいいいいいいいいいいいいいいいいいいいいいいいいいいいいいいいいいいいいいいいいい"/>
+		<Message Text="$(Gekka_SignTool_Algorithms)"/>
+	</Target>
 </Project>
