@@ -7,7 +7,8 @@
 	<PropertyGroup>
 		<!--<Configuration Condition="'$(Configuration)'==''">Release</Configuration>-->
 
-		<Gekka_SignTool_EnableSign_Build>true</Gekka_SignTool_EnableSign_Build>
+		<!--<Gekka_SignTool_EnableSign_Build>true</Gekka_SignTool_EnableSign_Build>-->
+		
 		<Gekka_SignTool_EnableSign_Publish Condition="'$(Gekka_SignTool_EnableSign_Publish)'==''">false</Gekka_SignTool_EnableSign_Publish>
 		<Gekka_SignTool_EnableSign_Nupkg Condition="'$(Gekka_SignTool_EnableSign_Nupkg)'==''">false</Gekka_SignTool_EnableSign_Nupkg>
 
@@ -154,19 +155,23 @@
 		<CreateProperty Value="$(VsInstallRoot)\Common7\Tools\VsDevCmd.bat" Condition="Exists('$(VsInstallRoot)\Common7\Tools\VsDevCmd.bat')">
 			<Output TaskParameter="Value" PropertyName="Gekka_SignTool_DevBatchFilePath" />
 		</CreateProperty>
-		<CreateProperty Value="$(VsInstallRoot)\VC\Auxiliary\Build\vcvars64.bat" Condition="Exists('$(VsInstallRoot)\VC\Auxiliary\Build\vcvars64.bat')">
+		<CreateProperty Value="-no_logo" Condition="Exists('$(VsInstallRoot)\Common7\Tools\VsDevCmd.bat')">
+			<Output TaskParameter="Value" PropertyName="Gekka_SignTool_DevBatchFilePath_arg" />
+		</CreateProperty>	
+		
+		<CreateProperty Value="$(VsInstallRoot)\VC\Auxiliary\Build\vcvars64.bat" Condition="Exists('$(VsInstallRoot)\VC\Auxiliary\Build\vcvars64.bat') and '$(Gekka_SignTool_DevBatchFilePath)'==''">
 			<Output TaskParameter="Value" PropertyName="Gekka_SignTool_DevBatchFilePath" />
 		</CreateProperty>
 		<Error Condition="!Exists($(Gekka_SignTool_DevBatchFilePath))" Text="DevBatch is not found" />
 
-		<Message Importance="high" Text="DevBatch=$(Gekka_SignTool_DevBatchFilePath)" />
+		<Message Importance="high" Text="DevBatch=$(Gekka_SignTool_DevBatchFilePath)   arg=$(Gekka_SignTool_DevBatchFilePath_arg)" />
 	</Target>
 
 	<!-- Signtool.exeのファイルパスを取得する  -->
 	<!-- 見つかったファイルのパスは Gekka_SignTool_ExePath プロパティにセット -->
 	<Target Name="Gekka_SignTool_GetSignToolExePath" DependsOnTargets="Gekka_SignTool_GetDevBatchFilePath" BeforeTargets="Build" Condition="'$(IsCrossTargetingBuild)'!='true' AND '$(Gekka_SignTool_ExePath)'=='' And $(OS.Contains('Windows')) And ('$(Gekka_SignTool_EnableSign_Build)'=='true' or '$(Gekka_SignTool_EnableSign_Publish)'=='true')">
 
-		<Exec Condition="!Exists($(Gekka_SignTool_TargetFullPath))" Command="call &quot;$(Gekka_SignTool_DevBatchFilePath)&quot; &amp;&amp; where signtool" IgnoreExitCode="true" ConsoleToMSBuild="true" EchoOff="true">
+		<Exec Condition="!Exists($(Gekka_SignTool_TargetFullPath))" Command="call &quot;$(Gekka_SignTool_DevBatchFilePath)&quot; $(Gekka_SignTool_DevBatchFilePath_arg) &amp;&amp; where signtool" IgnoreExitCode="true" ConsoleToMSBuild="true" EchoOff="true">
 			<Output TaskParameter="ConsoleOutput" PropertyName="WhereOutput" />
 		</Exec>
 		<PropertyGroup>
